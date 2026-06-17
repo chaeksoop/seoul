@@ -636,10 +636,12 @@ body.reader-open {
 .reader-overlay {
   display: none;
   position: fixed;
-  inset: 0;
+  top: 0; left: 0; right: 0; bottom: 0;
   z-index: 2000;
   background: #F5F0E8;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
 }
 
 .reader-overlay.open {
