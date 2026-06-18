@@ -29,8 +29,7 @@
       <div class="cover-carousel-track" id="coverCarouselTrack"></div>
     </div>
 
-    <p class="chips-hint">🔍 키워드를 선택하면 해당 도서만 보여요</p>
-    <button class="filter-trigger" id="filterTrigger">
+        <button class="filter-trigger" id="filterTrigger">
       <span class="filter-trigger-icon">🔍</span>
       <span class="filter-trigger-text" id="filterTriggerText">키워드로 검색</span>
       <span class="filter-trigger-count" id="filterTriggerCount"></span>
@@ -2056,7 +2055,9 @@
     // ── Cover Carousel ──
     function buildCarousel(eventOnly) {
       const track = document.getElementById('coverCarouselTrack');
-      let pool = eventOnly ? books.filter(b => b.event) : books;
+      let pool = eventOnly ? books.filter(b => b.event)
+        : activeTags.length > 0 ? books.filter(book => book.tags.some(tag => activeTags.includes(tag)))
+        : books;
       const shuffled = [...pool].sort(() => Math.random() - 0.5);
       const items = shuffled.map(b => `
         <div class="cover-carousel-item" data-book-id="${b.id}">

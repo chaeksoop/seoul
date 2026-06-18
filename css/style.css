@@ -137,14 +137,6 @@ body.reader-open {
 }
 
 /* ── Keyword Chips ── */
-.chips-hint {
-  text-align: center;
-  font-size: 0.88rem;
-  color: #A8BDA5;
-  margin: 0 0 12px;
-  letter-spacing: -0.01em;
-}
-
 .chips {
   display: flex;
   flex-wrap: wrap;
