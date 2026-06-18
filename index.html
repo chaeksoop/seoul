@@ -24,11 +24,10 @@
     <header class="header">
       <h1 id="logo">책<span>숲</span></h1>
       <p class="tagline">책의 숲에서 잠시 멈춤.</p>
-      <span class="booth-info">서울국제도서전 · B109</span>
       <div class="brand-bar">
-        <span>컬처룩</span>
-        <span class="brand-bar-divider">&amp;</span>
-        <span>코쿤북스</span>
+        <span class="brand-logo brand-logo-left">컬처룩</span>
+        <span class="booth-info">서울국제도서전 · B109</span>
+        <span class="brand-logo brand-logo-right">코쿤북스</span>
       </div>
     </header>
 
@@ -41,6 +40,7 @@
       <span class="filter-trigger-icon">🔍</span>
       <span class="filter-trigger-text" id="filterTriggerText">키워드로 검색하기</span>
       <span class="filter-trigger-count" id="filterTriggerCount"></span>
+      <span class="filter-trigger-clear" id="filterTriggerClear" style="display:none">✕</span>
     </button>
 
     <div class="event-notice" id="eventFilter" role="button" tabindex="0">
@@ -1279,7 +1279,7 @@
       if (book.pages) infoParts.push(`📄 ${book.pages}쪽`);
       if (book.isbn) infoParts.push(`🔖 ISBN: ${book.isbn}`);
       const readBtnPopup = book.event
-        ? `<button class="read-btn popup-read-btn" data-book-id="${book.id}"><span class="read-btn-icon">⏱️</span> 잠깐 읽고 기대평 작성</button>`
+        ? `<button class="read-btn popup-read-btn" data-book-id="${book.id}"><span class="read-btn-icon">⏱️</span> 책 읽고 기대평 작성</button>`
         : '';
       content.innerHTML = `
         <button class="book-popup-close" id="bookPopupCloseBtn">✕</button>
@@ -1562,13 +1562,13 @@
       const authorEnHTML = book.authorEn ? ` · ${book.authorEn}` : '';
       const excerptHTML = book.excerpt ? `<div class="excerpt">${book.excerpt}</div>` : '';
 
-      const badgeHTML = book.event ? '<span class="event-badge">🎁</span>' : '';
+      const badgeHTML = book.event ? '<span class="event-badge"><span class="event-badge-text">이벤트</span></span>' : '';
       const coverHTML = book.image
         ? `<img src="${book.image}" alt="${book.title}" class="book-cover-img">`
         : `<div class="book-cover-initials">${getInitials(book.title)}</div>`;
 
       const readBtnHTML = book.event
-        ? `<button class="read-btn read-5min-btn" data-book-id="${book.id}"><span class="read-btn-icon">⏱️</span> 잠깐 읽고 기대평 작성</button>`
+        ? `<button class="read-btn read-5min-btn" data-book-id="${book.id}"><span class="read-btn-icon">⏱️</span> 책 읽고 기대평 작성</button>`
         : '';
 
       card.innerHTML = `
@@ -1809,13 +1809,25 @@
               </div>
             `).join('')}
           </div>
+          <div class="event-book-detail" id="eventBookDetail"></div>
         `;
         container.querySelectorAll('.event-book-card').forEach(el => {
           el.addEventListener('click', (e) => {
             e.stopPropagation();
             const id = parseInt(el.dataset.bookId);
             const book = books.find(b => b.id === id);
-            if (book) openBookPopup(book);
+            if (!book) return;
+            const detail = document.getElementById('eventBookDetail');
+            const prev = detail.querySelector('.book-card');
+            if (prev && prev.dataset.bookId == id) {
+              detail.innerHTML = '';
+              return;
+            }
+            const card = createBookCard(book);
+            card.classList.add('expanded');
+            card.querySelector('.book-detail').style.height = 'auto';
+            detail.innerHTML = '';
+            detail.appendChild(card);
           });
         });
       } else {
@@ -1851,17 +1863,30 @@
     function updateFilterTrigger() {
       const text = document.getElementById('filterTriggerText');
       const count = document.getElementById('filterTriggerCount');
+      const clear = document.getElementById('filterTriggerClear');
       if (activeTags.length > 0) {
         text.textContent = activeTags.join(', ');
-        count.textContent = activeTags.length > 0 ? activeTags.length : '';
+        count.textContent = activeTags.length;
         count.style.display = '';
+        clear.style.display = '';
       } else {
         text.textContent = '키워드로 검색하기';
         count.style.display = 'none';
+        clear.style.display = 'none';
       }
     }
 
-    document.getElementById('filterTrigger').addEventListener('click', () => {
+    document.getElementById('filterTrigger').addEventListener('click', (e) => {
+      if (e.target.closest('#filterTriggerClear')) {
+        eventFilter.classList.remove('active');
+        document.getElementById('eventBooks').innerHTML = '';
+        document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+        activeTags = [];
+        updateFilterTrigger();
+        renderBooks();
+        buildCarousel();
+        return;
+      }
       renderChips();
       document.getElementById('chipsModal').classList.add('open');
       document.getElementById('chipsModalOverlay').classList.add('open');
@@ -2137,6 +2162,59 @@
     });
 
     // ── Cover Carousel ──
+    let carouselDrag = { isDown: false, startX: 0, scrollLeft: 0 };
+
+    function initCarouselDrag() {
+      const track = document.getElementById('coverCarouselTrack');
+      if (!track) return;
+
+      function pauseAnim() { track.style.animationPlayState = 'paused'; }
+      function resumeAnim() { if (!carouselDrag.isDown) track.style.animationPlayState = ''; }
+
+      track.addEventListener('mousedown', (e) => {
+        carouselDrag.isDown = true;
+        carouselDrag.startX = e.pageX - track.offsetLeft;
+        carouselDrag.scrollLeft = 0;
+        pauseAnim();
+        track.style.cursor = 'grabbing';
+      });
+      track.addEventListener('mouseleave', () => {
+        if (!carouselDrag.isDown) return;
+        carouselDrag.isDown = false;
+        track.style.cursor = '';
+        resumeAnim();
+      });
+      track.addEventListener('mouseup', () => {
+        carouselDrag.isDown = false;
+        track.style.cursor = '';
+        resumeAnim();
+      });
+      track.addEventListener('mousemove', (e) => {
+        if (!carouselDrag.isDown) return;
+        e.preventDefault();
+        const x = e.pageX - track.offsetLeft;
+        const walk = (x - carouselDrag.startX) * 1.5;
+        track.style.transform = `translateX(${carouselDrag.scrollLeft + walk}px)`;
+      });
+
+      track.addEventListener('touchstart', (e) => {
+        carouselDrag.isDown = true;
+        carouselDrag.startX = e.touches[0].pageX - track.offsetLeft;
+        carouselDrag.scrollLeft = track.style.transform ? parseFloat(track.style.transform.replace(/[^\d-]/g, '')) : 0;
+        pauseAnim();
+      }, { passive: true });
+      track.addEventListener('touchend', () => {
+        carouselDrag.isDown = false;
+        resumeAnim();
+      }, { passive: true });
+      track.addEventListener('touchmove', (e) => {
+        if (!carouselDrag.isDown) return;
+        const x = e.touches[0].pageX - track.offsetLeft;
+        const walk = (x - carouselDrag.startX) * 1.5;
+        track.style.transform = `translateX(${carouselDrag.scrollLeft + walk}px)`;
+      }, { passive: true });
+    }
+
     function buildCarousel(eventOnly) {
       const track = document.getElementById('coverCarouselTrack');
       let pool = eventOnly ? books.filter(b => b.event) : books;
@@ -2207,6 +2285,7 @@
       await loadReviews();
       await loadMessages();
       buildCarousel();
+      initCarouselDrag();
       renderBooks();
     }
     initData();

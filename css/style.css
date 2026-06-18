@@ -123,19 +123,6 @@ body.reader-open {
   letter-spacing: -0.01em;
 }
 
-.header .booth-info {
-  display: inline-block;
-  margin-top: 16px;
-  padding: 7px 20px;
-  font-size: 0.85rem;
-  color: #3D6E3D;
-  background: rgba(168, 201, 165, 0.2);
-  border: 1px solid rgba(61, 110, 61, 0.15);
-  border-radius: 20px;
-  letter-spacing: -0.01em;
-  font-weight: 600;
-}
-
 /* ── Keyword Chips ── */
 .chips {
   display: flex;
@@ -235,6 +222,26 @@ body.reader-open {
   border-radius: 10px;
   font-size: 0.72rem;
   font-weight: 600;
+}
+
+.filter-trigger-clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  font-size: 0.75rem;
+  color: #7A8D7A;
+  background: rgba(168, 201, 165, 0.15);
+  border-radius: 50%;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.filter-trigger-clear:hover {
+  background: rgba(168, 201, 165, 0.3);
+  color: #2C3E2D;
 }
 
 /* ── Chips Modal ── */
@@ -404,15 +411,19 @@ body.reader-open {
 /* ── Event Books (expanded) ── */
 .event-books {
   width: 100%;
-  overflow: hidden;
-  max-height: 0;
-  transition: max-height 0.4s ease, padding 0.3s ease;
+  display: none;
   padding: 0;
 }
 
 #eventFilter.active .event-books {
-  max-height: 600px;
+  display: block;
   padding: 16px 0 4px;
+  animation: eventFadeIn 0.3s ease;
+}
+
+@keyframes eventFadeIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .event-books-grid {
@@ -459,6 +470,24 @@ body.reader-open {
   -webkit-box-orient: vertical;
   word-break: keep-all;
   width: 100%;
+}
+
+.event-book-detail {
+  margin-top: 12px;
+}
+
+.event-book-detail .book-card {
+  cursor: default;
+  box-shadow: 0 2px 12px rgba(44, 62, 45, 0.08);
+}
+
+.event-book-detail .book-card .book-cover {
+  min-height: 160px;
+  padding: 12px 16px;
+}
+
+.event-book-detail .book-card .book-cover-img {
+  max-height: 200px;
 }
 
 @media (min-width: 480px) {
@@ -573,14 +602,20 @@ body.reader-open {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 40px;
-  height: 40px;
-  font-size: 1.4rem;
-  background: linear-gradient(135deg, #FFE066, #FFB347);
-  border-radius: 50%;
-  box-shadow: 0 2px 8px rgba(255, 176, 71, 0.4);
-  animation: badgePop 0.5s ease;
-  margin-top: -4px;
+  min-width: 48px;
+  height: 24px;
+  padding: 0 10px;
+  background: linear-gradient(135deg, #FFB347, #FF8C47);
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(255, 140, 71, 0.3);
+  margin-top: -2px;
+}
+
+.event-badge-text {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.04em;
 }
 
 @keyframes badgePop {
@@ -1598,41 +1633,58 @@ body.reader-open {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 14px;
-  padding: 28px 0 24px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #7A8D7A;
-  letter-spacing: 0.04em;
+  gap: 12px;
+  padding: 24px 0 20px;
   position: relative;
   z-index: 1;
 }
 
-.brand-bar::before {
-  content: '';
-  display: block;
-  width: 50%;
-  height: 1px;
-  margin: 0 auto 20px;
-  background: linear-gradient(90deg, transparent, rgba(168, 201, 165, 0.5), transparent);
-  position: absolute;
-  top: 0;
-  left: 25%;
-}
-
-.brand-bar span:first-child,
-.brand-bar span:last-child {
-  padding: 8px 22px;
+.brand-logo {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #7A8D7A;
+  padding: 6px 14px;
   background: linear-gradient(135deg, #E8EDE6, #E2E9DF);
-  border-radius: 20px;
+  border-radius: 16px;
   border: 1px solid rgba(168, 201, 165, 0.25);
   box-shadow: 0 1px 3px rgba(168, 201, 165, 0.08);
+  white-space: nowrap;
 }
 
-.brand-bar-divider {
-  color: #BCC8B9;
-  font-weight: 400;
-  font-size: 1.1rem;
+.brand-logo-left::before {
+  content: '';
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  margin-right: 6px;
+  background: rgba(168, 201, 165, 0.3);
+  border-radius: 4px;
+  vertical-align: middle;
+}
+
+.brand-logo-right::after {
+  content: '';
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  margin-left: 6px;
+  background: rgba(168, 201, 165, 0.3);
+  border-radius: 50%;
+  vertical-align: middle;
+}
+
+.booth-info {
+  display: inline-block;
+  padding: 6px 16px;
+  font-size: 0.82rem;
+  color: #3D6E3D;
+  background: rgba(168, 201, 165, 0.15);
+  border: 1px solid rgba(61, 110, 61, 0.15);
+  border-radius: 16px;
+  letter-spacing: -0.01em;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 /* ── Footer ── */
