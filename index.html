@@ -49,8 +49,9 @@
         <span class="event-label">EVENT</span>
       </div>
       <div class="event-notice-bottom">
-        이벤트 도서를 읽고 기대평을 남기면 <strong>소정의 선물</strong>을 드려요! <span class="event-hint">클릭하면 해당 도서가 아래에 나타나요</span>
+        이벤트 도서를 읽고 기대평을 남기면 <strong>소정의 선물</strong>을 드려요! <span class="event-hint">클릭해서 펼치기</span>
       </div>
+      <div class="event-books" id="eventBooks"></div>
     </div>
 
     <div class="book-list" id="bookList"></div>
@@ -1128,7 +1129,6 @@
         ebookContent[bookId] = decodeBookData(encoded);
       } catch {}
     }
-    let eventFilterActive = false;
     let activeTags = [];
     let currentReaderBookId = null;
     let readerTimerInterval = null;
@@ -1702,16 +1702,11 @@
       const list = document.getElementById('bookList');
       list.innerHTML = '';
 
-      if (!eventFilterActive && activeTags.length === 0) {
+      if (eventFilter.classList.contains('active') || activeTags.length === 0) {
         list.innerHTML = '';
         return;
       }
-      let filtered;
-      if (eventFilterActive) {
-        filtered = books.filter(b => b.event);
-      } else {
-        filtered = books.filter(book => book.tags.some(tag => activeTags.includes(tag)));
-      }
+      let filtered = books.filter(book => book.tags.some(tag => activeTags.includes(tag)));
 
       if (filtered.length === 0) {
         list.innerHTML = '<div class="empty-state"><p>해당 키워드의 책이 없습니다.<br>다른 키워드를 선택해보세요.</p></div>';
@@ -1801,20 +1796,43 @@
     const eventFilter = document.getElementById('eventFilter');
 
     eventFilter.addEventListener('click', () => {
-      eventFilterActive = !eventFilterActive;
-      eventFilter.classList.toggle('active');
+      const isActive = eventFilter.classList.toggle('active');
+      const container = document.getElementById('eventBooks');
+      if (isActive) {
+        const eventBooks = books.filter(b => b.event);
+        container.innerHTML = `
+          <div class="event-books-grid">
+            ${eventBooks.map(b => `
+              <div class="event-book-card" data-book-id="${b.id}">
+                <img src="${b.image}" alt="${b.title}" loading="lazy">
+                <div class="event-book-card-title">${b.title}</div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+        container.querySelectorAll('.event-book-card').forEach(el => {
+          el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const id = parseInt(el.dataset.bookId);
+            const book = books.find(b => b.id === id);
+            if (book) openBookPopup(book);
+          });
+        });
+      } else {
+        container.innerHTML = '';
+      }
       document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
       activeTags = [];
       updateFilterTrigger();
       renderBooks();
-      buildCarousel(eventFilterActive);
+      buildCarousel();
     });
 
     document.getElementById('chips').addEventListener('click', (e) => {
       const chip = e.target.closest('.chip');
       if (!chip) return;
-      eventFilterActive = false;
       eventFilter.classList.remove('active');
+      document.getElementById('eventBooks').innerHTML = '';
       chip.classList.toggle('active');
 
       activeTags = [];
