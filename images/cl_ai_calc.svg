@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="500" height="700" viewBox="0 0 500 700">
+  <rect width="500" height="700" fill="#8BA8A0"/>
+  <rect x="25" y="25" width="450" height="650" rx="15" fill="none" stroke="white" stroke-width="3" opacity="0.5"/>
+  <g opacity="0.08">
+    <line x1="50" y1="0" x2="50" y2="700" stroke="white" stroke-width="1"/>
+    <line x1="100" y1="0" x2="100" y2="700" stroke="white" stroke-width="1"/>
+    <line x1="150" y1="0" x2="150" y2="700" stroke="white" stroke-width="1"/>
+    <line x1="200" y1="0" x2="200" y2="700" stroke="white" stroke-width="1"/>
+    <line x1="250" y1="0" x2="250" y2="700" stroke="white" stroke-width="1"/>
+    <line x1="300" y1="0" x2="300" y2="700" stroke="white" stroke-width="1"/>
+    <line x1="350" y1="0" x2="350" y2="700" stroke="white" stroke-width="1"/>
+    <line x1="400" y1="0" x2="400" y2="700" stroke="white" stroke-width="1"/>
+    <line x1="450" y1="0" x2="450" y2="700" stroke="white" stroke-width="1"/>
+  </g>
+  <text x="250" y="310" text-anchor="middle" fill="white" font-family="Apple SD Gothic Neo, Pretendard, sans-serif" font-size="38" font-weight="700">AI 시대에도</text>
+  <text x="250" y="360" text-anchor="middle" fill="white" font-family="Apple SD Gothic Neo, Pretendard, sans-serif" font-size="38" font-weight="700">미분을 배워야</text>
+  <text x="250" y="410" text-anchor="middle" fill="white" font-family="Apple SD Gothic Neo, Pretendard, sans-serif" font-size="38" font-weight="700">하나요?</text>
+  <text x="250" y="560" text-anchor="middle" fill="white" font-family="Apple SD Gothic Neo, Pretendard, sans-serif" font-size="22">이한진</text>
+  <text x="250" y="595" text-anchor="middle" fill="white" font-family="Apple SD Gothic Neo, Pretendard, sans-serif" font-size="22">컬처룩 · 15,000원</text>
+</svg>
