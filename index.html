@@ -2145,7 +2145,7 @@
     });
 
     // ── Cover Carousel ──
-    let carouselState = { isDown: false, startX: 0, startPos: 0, autoResume: null, hadAnim: false };
+    let carouselState = { isDown: false, startX: 0, startPos: 0, autoResume: null, animId: null };
 
     function getCurrentX(el) {
       const m = window.getComputedStyle(el).transform.match(/matrix.*\((.+)\)/);
@@ -2158,34 +2158,30 @@
       const track = document.getElementById('coverCarouselTrack');
       if (!track) return;
 
-      function pauseAnim() {
-        carouselState.hadAnim = window.getComputedStyle(track).animationName !== 'none';
-        const pos = getCurrentX(track);
-        track.style.transform = `translateX(${pos}px)`;
-        track.style.animation = 'none';
+      function startAutoScroll() {
+        stopAutoScroll();
+        const halfW = track.scrollWidth / 2;
+        if (halfW <= 0) return;
+        let pos = getCurrentX(track);
+        carouselState.animId = requestAnimationFrame(function tick() {
+          pos -= 0.4;
+          if (pos <= -halfW) pos += halfW;
+          track.style.transform = `translateX(${pos}px)`;
+          carouselState.animId = requestAnimationFrame(tick);
+        });
       }
 
-      function resumeAnim() {
-        if (!carouselState.hadAnim) {
-          track.style.transform = '';
-          return;
-        }
-        const pos = getCurrentX(track);
-        const halfW = track.scrollWidth / 2;
-        if (halfW > 0) {
-          const progress = Math.min(1, Math.max(0, (-pos) / halfW));
-          const delay = -(progress * 60);
-          track.style.animation = 'none';
-          void track.offsetHeight;
-          track.style.animation = 'carouselScroll 60s linear infinite';
-          track.style.animationDelay = `${delay}s`;
+      function stopAutoScroll() {
+        if (carouselState.animId) {
+          cancelAnimationFrame(carouselState.animId);
+          carouselState.animId = null;
         }
       }
 
       function scheduleResume() {
         clearTimeout(carouselState.autoResume);
         carouselState.autoResume = setTimeout(() => {
-          if (!carouselState.isDown) resumeAnim();
+          if (!carouselState.isDown) startAutoScroll();
         }, 4000);
       }
 
@@ -2205,11 +2201,16 @@
         track.style.transform = `translateX(${pos}px)`;
       }
 
+      // Replace CSS animation with JS auto-scroll
+      track.style.animation = 'none';
+      track.classList.remove('paused');
+      startAutoScroll();
+
       track.addEventListener('mousedown', (e) => {
         carouselState.isDown = true;
         carouselState.startX = e.pageX - track.offsetLeft;
         carouselState.startPos = getCurrentX(track);
-        pauseAnim();
+        stopAutoScroll();
         clearTimeout(carouselState.autoResume);
         track.style.cursor = 'grabbing';
       });
@@ -2228,7 +2229,7 @@
         carouselState.isDown = true;
         carouselState.startX = e.touches[0].pageX - track.offsetLeft;
         carouselState.startPos = getCurrentX(track);
-        pauseAnim();
+        stopAutoScroll();
         clearTimeout(carouselState.autoResume);
       }, { passive: true });
       track.addEventListener('touchmove', (e) => {
@@ -2239,6 +2240,16 @@
         carouselState.isDown = false;
         scheduleResume();
       }, { passive: true });
+
+      // Wire buildCarousel to restart JS auto-scroll after rebuilds
+      const origBuild = buildCarousel;
+      buildCarousel = function(eventOnly) {
+        stopAutoScroll();
+        origBuild(eventOnly);
+        track.style.animation = 'none';
+        track.classList.remove('paused');
+        if (!eventOnly) startAutoScroll();
+      };
     }
 
     function buildCarousel(eventOnly) {
