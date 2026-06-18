@@ -606,41 +606,52 @@ body.reader-open {
 }
 
 .book-reviews {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid rgba(168, 201, 165, 0.25);
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(168, 201, 165, 0.2);
 }
 
 .book-reviews-title {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #A8BDA5;
-  letter-spacing: 0.04em;
-  margin-bottom: 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #8AAB8A;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 14px;
 }
 
 .book-review-item {
-  padding: 10px 14px;
-  background: #F5F8F4;
-  border-radius: 10px;
-  margin-bottom: 8px;
+  padding: 14px 16px;
+  background: #F7FAF6;
+  border-radius: 12px;
+  margin-bottom: 10px;
+  border: 1px solid rgba(168, 201, 165, 0.12);
+  box-shadow: 0 1px 4px rgba(44, 62, 45, 0.04);
+  transition: box-shadow 0.2s ease;
 }
 
 .book-review-item:last-child {
   margin-bottom: 0;
 }
 
+.book-review-item:hover {
+  box-shadow: 0 2px 8px rgba(44, 62, 45, 0.06);
+}
+
 .book-review-text {
-  font-size: 0.88rem;
-  color: #4A5D4A;
-  line-height: 1.6;
+  font-size: 0.9rem;
+  color: #3D4A3D;
+  line-height: 1.7;
   font-style: italic;
+  letter-spacing: -0.005em;
 }
 
 .book-review-author {
   font-size: 0.78rem;
   color: #A8BDA5;
-  margin-top: 4px;
+  margin-top: 6px;
+  font-weight: 500;
+  text-align: right;
 }
 
 /* ── 3분 읽기 Button ── */
