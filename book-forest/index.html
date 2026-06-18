@@ -1,0 +1,2125 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>책숲</title>
+  <meta property="og:title" content="책숲 - 책의 숲에서 잠시 멈춤">
+  <meta property="og:description" content="서울국제도서전 B109 · 컬처룩 &amp; 코쿤북스">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="images/og-image.jpg">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <meta name="description" content="책숲 — 책의 숲에서 잠시 멈춤.. 서울국제도서전 책숲 부스에 오신 것을 환영합니다.">
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+  <div class="container">
+
+    <header class="header">
+      <h1 id="logo">책<span>숲</span></h1>
+      <p class="tagline">책의 숲에서 잠시 멈춤.</p>
+      <span class="booth-info">서울국제도서전 · B109</span>
+      <div class="brand-bar">
+        <span>컬처룩</span>
+        <span class="brand-bar-divider">&amp;</span>
+        <span>코쿤북스</span>
+      </div>
+    </header>
+
+    <div class="cover-carousel" id="coverCarousel">
+      <div class="cover-carousel-track" id="coverCarouselTrack"></div>
+    </div>
+
+    <p class="chips-hint">🔍 키워드를 선택하면 해당 도서만 보여요</p>
+    <button class="filter-trigger" id="filterTrigger">
+      <span class="filter-trigger-icon">🔍</span>
+      <span class="filter-trigger-text" id="filterTriggerText">키워드로 검색</span>
+      <span class="filter-trigger-count" id="filterTriggerCount"></span>
+    </button>
+
+    <div class="event-notice" id="eventFilter" role="button" tabindex="0">
+      <div class="event-notice-top">
+        <span class="event-icon">🎁</span>
+        <span class="event-label">EVENT</span>
+      </div>
+      <div class="event-notice-bottom">
+        해당 도서를 읽고 기대평을 남기면 <strong>소정의 선물</strong>을 드려요! <span class="event-hint">클릭해서 보기</span>
+      </div>
+    </div>
+
+    <div class="book-list" id="bookList"></div>
+
+    <footer class="footer">
+      <p>
+        <strong>책숲</strong> · 서울국제도서전 B109<br>
+        QR 문의: 부스 스태프에게 말씀해주세요<br>
+        &copy; 2026 컬처룩 · 코쿤북스
+      </p>
+    </footer>
+
+  </div>
+
+  <!-- Book Popup -->
+  <div class="book-popup-overlay" id="bookPopupOverlay">
+    <div class="book-popup" id="bookPopupContent"></div>
+  </div>
+
+  <!-- Chips Modal -->
+  <div class="chips-modal-overlay" id="chipsModalOverlay"></div>
+  <div class="chips-modal" id="chipsModal">
+    <div class="chips-modal-inner">
+      <div class="chips-modal-header">
+        <span class="chips-modal-title">키워드 선택</span>
+        <button class="chips-modal-close" id="chipsModalClose">&times;</button>
+      </div>
+      <div class="chips-modal-body">
+        <div class="chips" id="chips"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- E-Reader Overlay -->
+  <div class="reader-overlay" id="readerOverlay">
+    <div class="reader-header">
+      <button class="reader-back-btn" id="readerBack" aria-label="뒤로 가기">✕</button>
+      <div class="reader-header-info">
+        <div class="reader-header-title" id="readerTitle">책 제목</div>
+        <div class="reader-header-author" id="readerAuthor">저자</div>
+      </div>
+      <div class="reader-timer-container">
+        <div class="reader-timer" id="readerTimer"><span id="timerElapsed">0:00</span><span class="timer-sep"> / </span><span class="timer-total">0:30</span></div>
+      </div>
+    </div>
+    <div class="reader-progress-bar">
+      <div class="reader-progress-fill" id="readerProgress"></div>
+    </div>
+    <div class="reader-hint">30초 후 리뷰 버튼이 활성화됩니다</div>
+    <div class="reader-content" id="readerContent">
+      <div class="reader-chapter-title" id="readerChapterTitle"></div>
+      <div id="readerParagraphs"></div>
+    </div>
+    <div class="reader-next-chapter" id="readerNextChapter">
+      <div class="next-chapter-btn-row">
+        <button class="next-chapter-btn" id="nextChapterBtn">📖 계속 읽기</button>
+        <button class="next-chapter-btn next-chapter-btn-accent" id="readerEventReviewBtn" style="display:none">🎁 기대평 쓰고 이벤트 굿즈 받기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Completion Popup -->
+  <div class="completion-popup" id="completionPopup">
+    <div class="completion-popup-overlay" id="completionOverlay"></div>
+    <div class="completion-popup-content">
+      <div class="completion-popup-icon">🎉</div>
+      <div class="completion-popup-title">읽기 완료!</div>
+      <div class="completion-popup-actions">
+        <button class="completion-popup-btn completion-popup-btn-primary" id="continueReadBtn">📖 계속 읽기</button>
+        <button class="completion-popup-btn completion-popup-btn-accent" id="eventReviewBtn">🎁 기대평 쓰고 이벤트 굿즈 받기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Celebration Popup (event review) -->
+  <div class="celebration-popup" id="celebrationPopup">
+    <div class="celebration-overlay" id="celebrationOverlay"></div>
+    <div class="celebration-content">
+      <div class="celebration-icon">🎉</div>
+      <div class="celebration-title">기대평 감사합니다!</div>
+      <div class="celebration-desc">즐거운 독서가 되셨기를 바랍니다.<br>부스 직원에게 화면을 보여주고 굿즈를 받으세요.</div>
+      <div class="celebration-actions">
+        <button class="completion-popup-btn completion-popup-btn-primary" id="celebrationCloseBtn">확인</button>
+      </div>
+    </div>
+    <canvas id="confettiCanvas" class="confetti-canvas"></canvas>
+  </div>
+
+  <!-- Floating Stop Button -->
+  <button class="floating-stop-btn" id="floatingStopBtn" aria-label="기대평 쓰기">
+    <span>✍️</span>
+    <span class="floating-stop-btn-label">기대평 쓰기</span>
+  </button>
+
+  <!-- Message Button -->
+  <button class="floating-msg-btn" id="floatingMsgBtn" aria-label="메시지 보내기">
+    <span>💬</span>
+    <span class="floating-msg-btn-label">메시지 보내기</span>
+  </button>
+
+  <!-- Book Download Button -->
+  <button class="floating-download-btn" id="floatingDownloadBtn" aria-label="도서 목록 다운로드">
+    <span>📚</span>
+    <span class="floating-download-btn-label">도서 목록</span>
+  </button>
+
+  <!-- Message Modal -->
+  <div class="msg-modal-overlay" id="msgModalOverlay"></div>
+  <div class="msg-modal" id="msgModal">
+    <div class="msg-modal-header">
+      <span class="msg-modal-icon">💬</span>
+      <span class="msg-modal-title">책숲에 메시지 보내기</span>
+      <button class="msg-modal-close" id="msgModalClose">&times;</button>
+    </div>
+    <div class="msg-modal-body">
+      <p class="msg-modal-desc">부스 방문 소감, 건의, 응원, 요청 사항 등 무엇이든 자유롭게 남겨주세요.</p>
+      <form id="msgForm">
+        <input type="text" class="msg-input" id="msgName" placeholder="이름 또는 별명 (선택)" maxlength="20">
+        <textarea class="msg-textarea" id="msgText" placeholder="메시지를 입력해주세요" maxlength="500" required></textarea>
+        <div class="msg-char-count"><span id="msgCount">0</span>/500</div>
+        <input type="email" class="msg-input" id="msgContact" placeholder="이메일 (선택) — 남기시면 답변을 보내드릴 수 있어요" maxlength="100">
+        <button type="submit" class="msg-submit" id="msgSubmit">보내기</button>
+      </form>
+      <div class="msg-success" id="msgSuccess" style="display:none">
+        <div class="msg-success-icon">✅</div>
+        <div class="msg-success-text">메시지가 전송되었습니다.<br>소중한 의견 감사합니다.</div>
+        <button class="msg-success-btn" id="msgSuccessClose">확인</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stop Drawer (review form) -->
+  <div class="stop-drawer-overlay" id="stopDrawerOverlay"></div>
+  <div class="stop-drawer" id="stopDrawer">
+    <div class="stop-drawer-header">
+      <div class="stop-drawer-icon">📝</div>
+      <div class="stop-drawer-title">한 줄 기대평 남기기</div>
+    </div>
+    <div id="stopDrawerForm"></div>
+  </div>
+
+  <!-- Admin Panel -->
+  <div id="adminPanel" class="admin-panel">
+    <div class="admin-overlay"></div>
+    <div class="admin-content">
+      <div class="admin-header">
+        <h2 id="adminTitle">📋 관리</h2>
+        <div class="admin-header-actions">
+          <div class="admin-tabs" id="adminTabs">
+            <button class="admin-tab active" data-tab="reviews">📋 기대평</button>
+            <button class="admin-tab" data-tab="messages">💬 메시지</button>
+          </div>
+          <button id="adminSelectAllBtn" class="admin-select-btn">전체 선택</button>
+          <button id="adminBatchDeleteBtn" class="admin-select-btn danger" disabled>선택 삭제</button>
+          <button id="exportExcelBtn" class="admin-export-btn">📥 엑셀</button>
+          <button id="adminClose" class="admin-close">&times;</button>
+        </div>
+      </div>
+      <div id="adminList" class="admin-list"></div>
+    </div>
+  </div>
+
+  <script>
+    // ── Data ──
+    const books = [
+      {
+        "id": 1,
+        "title": "창조적 행위: 존재의 방식",
+        "titleEn": "The Creative Act: A Way of Being",
+        "author": "릭 루빈",
+        "authorEn": "Rick Rubin",
+        "tags": ["영감", "창작", "예술", "창조성"],
+        "description": "전설적인 프로듀서 릭 루빈이 40년간 음악과 예술을 통해 발견한 창조성의 본질. 모든 선택이 창조적 행위가 되는 순간, 우리는 비로소 존재의 방식을 깨닫는다.",
+        "excerpt": "모든 것은 창조적 행위로 시작된다. 당신이 하는 모든 선택이 곧 창조다.",
+        "publisher": "코쿤북스",
+        "color": "#D4A574",
+        "image": "images/creative-act.jpg",
+        "isbn": "9791197831744",
+        "kdc": "600",
+        "price": 19800,
+        "pages": 352,
+        "event": true
+      },
+      {
+        "id": 2,
+        "title": "뒷마당 탐조 클럽",
+        "titleEn": "The Backyard Bird Chronicles",
+        "author": "에이미 탄",
+        "authorEn": "Amy Tan",
+        "tags": ["자연", "새", "힐링", "생태", "그림책", "에세이"],
+        "description": "소설가 에이미 탄이 처음 새를 관찰하기 시작하며 깨달은 삶의 의미. 뒷마당에서 만난 작은 새들이 건네는 위로와 지혜, 그리고 인간과 자연의 연결에 관한 아름다운 기록.",
+        "excerpt": "새들은 알았다. 언제 멈추고, 언제 떠나야 하는지를.",
+        "publisher": "코쿤북스",
+        "color": "#7DAF7A",
+        "image": "images/backyard-birds.jpg",
+        "isbn": "9791197831799",
+        "kdc": "598",
+        "price": 32000,
+        "pages": 500,
+        "event": true
+      },
+      {
+        "id": 3,
+        "title": "새와 나무와 돌멩이의 지적 세계",
+        "titleEn": "Ways of Being",
+        "author": "제임스 브라이들",
+        "authorEn": "James Bridle",
+        "tags": ["자연", "과학", "생태", "식물", "새"],
+        "description": "인간 중심의 지능 개념을 넘어, 새와 나무와 돌멩이가 각자의 방식으로 존재하고 상호작용하는 세계. 우리가 '지적이다'라고 부르는 것의 의미를 다시 묻는 확장된 지식의 지도.",
+        "excerpt": "돌멩이에게도 시간이 있다. 단지 우리가 느끼는 방식과 다를 뿐이다.",
+        "publisher": "코쿤북스",
+        "color": "#8B9E7A",
+        "image": "images/ways-of-being.jpg",
+        "isbn": "9791199304901",
+        "kdc": "153",
+        "price": 25000,
+        "pages": 460,
+        "event": true
+      },
+      {
+        "id": 4,
+        "title": "포에버 도그",
+        "titleEn": "Forever Dog",
+        "subtitle": "반려견 수명 연장 프로젝트",
+        "author": "로드니 하비브, 캐런 쇼 베커",
+        "authorEn": "Rodney Habib, Karen Shaw Becker",
+        "tags": ["반려동물", "건강", "과학"],
+        "description": "세계적 반려동물 케어 전문가들이 밝혀낸 반려견 장수의 과학.",
+        "excerpt": "개는 이제 우리의 가족이다.",
+        "publisher": "코쿤북스",
+        "color": "#7B9E8B",
+        "image": "images/forever-dog.jpg",
+        "isbn": "9791197831713",
+        "kdc": "490",
+        "price": 25000,
+        "pages": 536
+      },
+      {
+        "id": 5,
+        "title": "포에버 도그 라이프",
+        "titleEn": "Forever Dog Life",
+        "subtitle": "반려견 수명 연장 프로젝트 실전편",
+        "author": "로드니 하비브, 캐런 쇼 베커",
+        "authorEn": "Rodney Habib, Karen Shaw Becker",
+        "tags": ["반려동물", "건강", "요리"],
+        "description": "누구나 쉽게 따라 할 수 있는 간식과 집밥 및 생활용품 레시피 120가지.",
+        "excerpt": "질 좋은 음식을 먹이는 것이 능사는 아니다.",
+        "publisher": "코쿤북스",
+        "color": "#B8A88A",
+        "image": "images/forever-dog-life.jpg",
+        "isbn": "9791197831782",
+        "kdc": "527",
+        "price": 28500,
+        "pages": 300
+      },
+      {
+        "id": 6,
+        "title": "우리가 사는 방식",
+        "titleEn": "Sempre Susan: A Memoir of Susan Sontag",
+        "subtitle": "수전 손택을 회상하며",
+        "author": "시그리드 누네즈",
+        "authorEn": "Sigrid Nunez",
+        "tags": ["에세이", "문학", "수전손택"],
+        "description": "2018 전미도서상 수상자가 그려낸 20세기 미국을 대표하는 지성 수전 손택의 회고.",
+        "excerpt": "그리운 인물의 목소리가 이 책에 생생하다.",
+        "publisher": "코쿤북스",
+        "color": "#C4A882",
+        "image": "images/our-way-of-living.jpg",
+        "isbn": "9791196999254",
+        "kdc": null,
+        "price": 14000,
+        "pages": 160
+      },
+      {
+        "id": 7,
+        "title": "마음을 치료하는 법",
+        "titleEn": "Maybe You Should Talk to Someone",
+        "author": "로리 고틀립",
+        "authorEn": "Lori Gottlieb",
+        "tags": ["심리", "에세이", "치유"],
+        "description": "심리 치료사이자 저널리스트인 로리 고틀립이 상담실 안팎에서 마주한 환자들.",
+        "excerpt": "우리는 모두 마음이 망가지는 느낌이 뭔지 안다.",
+        "publisher": "코쿤북스",
+        "color": "#9B8EA8",
+        "image": "images/healing-the-mind.jpg",
+        "isbn": "9791196999209",
+        "kdc": "186",
+        "price": 19800,
+        "pages": 568
+      },
+      {
+        "id": 8,
+        "title": "우연이 만든 세계",
+        "titleEn": "A Series of Fortunate Events: Chance and the Making of the Planet, Life, and You",
+        "author": "션 B. 캐럴",
+        "authorEn": "Sean B. Carroll",
+        "tags": ["과학", "자연"],
+        "description": "지질학, 생물학 등의 과학을 총동원해 우리를 지금 여기에 존재하게 만든 결정적인 요인 '우연'에 관한 놀라운 이야기.",
+        "excerpt": "우리는 특별하지 않아요, 운이 좋았을 뿐.",
+        "publisher": "코쿤북스",
+        "color": "#8BA8B8",
+        "image": "images/world-by-chance.jpg",
+        "isbn": "9791196999292",
+        "kdc": "472",
+        "price": 16500,
+        "pages": 272
+      },
+      {
+        "id": 9,
+        "title": "할리우드 장르",
+        "author": "토머스 샤츠, Thomas Schatz",
+        "tags": ["영화", "미디어"],
+        "description": "할리우드가 만들어 낸 장르의 기원과 진화를 체계적으로 분석한다.",
+        "excerpt": "할리우드는 장르로 말한다. 장르는 세계를 보는 방식이다.",
+        "publisher": "컬처룩",
+        "color": "#7B8FA8",
+        "image": "images/cl_37508393.jpg",
+        "isbn": "9791185521015",
+        "kdc": "680",
+        "price": 28000,
+        "pages": 560
+      },
+      {
+        "id": 10,
+        "title": "켄 로치: 영화 텔레비전의 정치학",
+        "author": "존 힐, John Hill",
+        "tags": ["영화", "사회"],
+        "description": "영화 [보리밭을 흔드는 바람]으로 2006년 칸 영화제 황금종려상을 수상한 세계적 거장 켄 로치의 작품 세계를 집중 조명한다.",
+        "excerpt": "영화는 사회를 말하는 가장 강력한 무기다.",
+        "publisher": "컬처룩",
+        "color": "#7B8FA8",
+        "image": "images/cl_41029455.jpg",
+        "isbn": "9791185521046",
+        "kdc": "680",
+        "price": 28000,
+        "pages": 560
+      },
+      {
+        "id": 11,
+        "title": "문화, 이데올로기, 정체성: 스튜어트 홀 선집",
+        "author": "스튜어트 홀, Stuart Hall",
+        "tags": ["미디어", "사회"],
+        "description": "스튜어트 홀의 '고전'으로 꼽히는 글들을 선집 형태로 엮은 책이다.",
+        "excerpt": "정체성은 발견되는 것이 아니라 만들어지는 것이다.",
+        "publisher": "컬처룩",
+        "color": "#A07B8A",
+        "image": "images/cl_277004908.jpg",
+        "isbn": "9791185521947",
+        "kdc": "300",
+        "price": 33000,
+        "pages": 624
+      },
+      {
+        "id": 12,
+        "title": "수학, 영화관에 가다",
+        "author": "버카드 폴스터, Polster, Burkard",
+        "tags": ["영화", "수학"],
+        "description": "수학과 수학자를 소재로 한 영화를 통해 수학의 아름다움과 그 세계로 안내하는 가이드이다.",
+        "excerpt": "영화 속에 숨은 수학의 아름다움을 발견하는 즐거움.",
+        "publisher": "컬처룩",
+        "color": "#7B8FA8",
+        "image": "images/cl_54159292.jpg",
+        "isbn": "9791185521206",
+        "kdc": "410",
+        "price": 22000,
+        "pages": 488
+      },
+      {
+        "id": 13,
+        "title": "큐브릭: 그로테스크의 미학",
+        "author": "제임스 네어모어, James Naremore",
+        "tags": ["영화", "예술"],
+        "description": "'무의식의 그림자'를 파헤친 스탠리 큐브릭의 영화 세계를 심층적으로 다룬다.",
+        "excerpt": "큐브릭의 영화는 우리가 보는 것을 의심하게 만든다.",
+        "publisher": "컬처룩",
+        "color": "#7B8FA8",
+        "image": "images/cl_75039494.jpg",
+        "isbn": "9791185521367",
+        "kdc": "680",
+        "price": 28000,
+        "pages": 584
+      },
+      {
+        "id": 14,
+        "title": "수학은 어떻게 예술이 되었는가",
+        "author": "이한진",
+        "tags": ["수학", "예술"],
+        "description": "수학, 특히 기하학을 중심으로 수학과 예술 사이의 다양한 교류를 역사적으로 조명한다.",
+        "excerpt": "수학과 예술의 경계에서 피어난 창조의 순간들.",
+        "publisher": "컬처룩",
+        "color": "#8BA8A0",
+        "image": "images/cl_91502993.jpg",
+        "isbn": "9791185521459",
+        "kdc": "410",
+        "price": 18000,
+        "pages": 292
+      },
+      {
+        "id": 15,
+        "title": "빨강의 문화사: 동굴 벽화에서 디지털까지",
+        "author": "스파이크 버클로, Spike Bucklow",
+        "tags": ["미디어", "예술", "역사"],
+        "description": "아주 오래전부터 인류와 함께해 온 빨강의 문화적 의미를 동굴 벽화에서 디지털 시대까지 추적한다.",
+        "excerpt": "가장 오래된 색, 가장 강렬한 의미.",
+        "publisher": "컬처룩",
+        "color": "#A07B8A",
+        "image": "images/cl_113375750.jpg",
+        "isbn": "9791185521527",
+        "kdc": "600",
+        "price": 22000,
+        "pages": 448
+      },
+      {
+        "id": 16,
+        "title": "루키노 비스콘티: 역사와 개인의 변증법",
+        "author": "제프리 노웰 스미스, Geoffrey Nowell-Smith",
+        "tags": ["영화", "역사"],
+        "description": "1960년대 이후 영화 이론 분야를 주도해 온 영화학자 제프리 노웰 스미스가 비스콘티의 장편 영화 전부를 망라해 그의 영화 세계를 비평한 역작이다.",
+        "excerpt": "역사는 개인의 삶을 통해 가장 선명하게 드러난다.",
+        "publisher": "컬처룩",
+        "color": "#7B8FA8",
+        "image": "images/cl_137099863.jpg",
+        "isbn": "9791185521558",
+        "kdc": "680",
+        "price": 28000,
+        "pages": 488
+      },
+      {
+        "id": 17,
+        "title": "자연이 만든 가장 완벽한 도형, 나선",
+        "author": "외위빈 함메르, Øyvind Hammer",
+        "tags": ["수학", "자연"],
+        "description": "나선형 화석을 연구하던 고생물학자가 나선이라는 도형의 매력에 빠져 써 내려간 '나선에 관한 거의 모든 것'이다.",
+        "excerpt": "자연이 선택한 가장 아름다운 형태, 나선.",
+        "publisher": "컬처룩",
+        "color": "#8BA8A0",
+        "image": "images/cl_148283979.jpg",
+        "isbn": "9791185521565",
+        "kdc": "410",
+        "price": 20000,
+        "pages": 360
+      },
+      {
+        "id": 18,
+        "title": "자연과 미디어: 고래에서 클라우드까지, 원소 미디어의 철학을 향해",
+        "author": "존 더럼 피터스, John Durham Peters",
+        "tags": ["미디어", "자연"],
+        "description": "세계적으로 저명한 미디어 철학자 존 더럼 피터스가 미디어 철학의 관점에서 미디어의 새로운 이해를 제안한다.",
+        "excerpt": "미디어는 기술이 아니라 환경이다.",
+        "publisher": "컬처룩",
+        "color": "#A07B8A",
+        "image": "images/cl_171817850.jpg",
+        "isbn": "9791185521626",
+        "kdc": "300",
+        "price": 33000,
+        "pages": 584
+      },
+      {
+        "id": 19,
+        "title": "수학 갤러리: 소수에서 미적분까지, 교양으로 읽는 수학 이야기",
+        "author": "이한진",
+        "tags": ["수학", "과학"],
+        "description": "갤러리에서 미술품을 감상하듯 천천히 책장을 넘기다 보면 수학이라는 학문이 얼마나 역동적인지 깨닫게 된다.",
+        "excerpt": "수학도 감상하는 법을 배우면 예술이 된다.",
+        "publisher": "컬처룩",
+        "color": "#8BA8A0",
+        "image": "images/cl_196167476.jpg",
+        "isbn": "9791185521718",
+        "kdc": "410",
+        "price": 15000,
+        "pages": 240
+      },
+      {
+        "id": 20,
+        "title": "보드게임하는 수학자",
+        "author": "김종락",
+        "tags": ["수학", "과학"],
+        "description": "세계적으로 유명한 보드게임 중 특히 수학적 개념이 풍부한 게임들을 소개한다.",
+        "excerpt": "게임 속에 숨겨진 수학의 원리를 찾는 즐거움.",
+        "publisher": "컬처룩",
+        "color": "#8BA8A0",
+        "image": "images/cl_217790104.jpg",
+        "isbn": "9791185521725",
+        "kdc": "410",
+        "price": 15000,
+        "pages": 164
+      },
+      {
+        "id": 21,
+        "title": "화이트: 백인 재현의 정치학",
+        "author": "리처드 다이어, Richard Dyer",
+        "tags": ["사회", "인종", "미디어"],
+        "description": "'white'가 내포하는 두터운 의미의 지층, 백인성을 기준으로 만들어진 서구 문화의 무수한 면면들을 날카롭게 파헤쳐 보여 준다.",
+        "excerpt": "백인성은 보이지 않는 권력의 색이다.",
+        "publisher": "컬처룩",
+        "color": "#9B8EA8",
+        "image": "images/cl_241589373.jpg",
+        "isbn": "9791185521770",
+        "kdc": "306",
+        "price": 28000,
+        "pages": 430
+      },
+      {
+        "id": 22,
+        "title": "논문, 쓰다: 대화하는 논문",
+        "author": "김용찬",
+        "tags": ["연구", "에세이"],
+        "description": "논술적 글쓰기를 해야 하는 모든 사람들의 필독서이자 좋은 논문을 쓰고자 고민하는 이들에게 꼭 필요한 책이다.",
+        "excerpt": "좋은 논문은 대화에서 시작된다.",
+        "publisher": "컬처룩",
+        "color": "#9EA8A0",
+        "image": "images/cl_244178702.jpg",
+        "isbn": "9791185521800",
+        "kdc": "300",
+        "price": 16000,
+        "pages": 288
+      },
+      {
+        "id": 23,
+        "title": "마음의 말: 정동의 사회적 삶",
+        "author": "김예란",
+        "tags": ["사회", "심리"],
+        "description": "탐색 시리즈 1권. 기성의 이념 질서에 근거를 둔 정치 제도의 모순을, 젠더와 세대 같은 사회적 범주에 준거를 둔 운동의 한계를 지적한다.",
+        "excerpt": "우리의 감정은 결코 개인적이지 않다.",
+        "publisher": "컬처룩",
+        "color": "#8FA8A8",
+        "image": "images/cl_250143780.jpg",
+        "isbn": "9791185521824",
+        "kdc": "300",
+        "price": 16000,
+        "pages": 252
+      },
+      {
+        "id": 24,
+        "title": "멋진 우주, 우아한 수학: 기하학으로 본 우주",
+        "author": "로버트 오서먼, Robert Osserman",
+        "tags": ["수학", "자연"],
+        "description": "이해하기 쉬운 수학적 측정 방법부터 일상과 동떨어진 낯선 관념까지 차근차근 소개하며 현대 우주론의 핵심을 이루는 수학 개념의 힘과 재미를 알려 준다.",
+        "excerpt": "우주는 수학이라는 언어로 쓰여 있다.",
+        "publisher": "컬처룩",
+        "color": "#8BA8A0",
+        "image": "images/cl_253578375.jpg",
+        "isbn": "9791185521848",
+        "kdc": "410",
+        "price": 15000,
+        "pages": 260
+      },
+      {
+        "id": 25,
+        "title": "상징권력과 문화: 부르디외의 이론과 비평",
+        "author": "이상길",
+        "tags": ["미디어", "사회"],
+        "description": "상징권력의 관점에서 문화를 바라보면 지배 체제를 존속시키려는 세력과 변혁하려는 세력 간의 끊임없는 투쟁이 벌어지는 전선으로 문화를 인식할 수 있다.",
+        "excerpt": "문화는 결코 순수하지 않다. 권력이 작동하는 장이다.",
+        "publisher": "컬처룩",
+        "color": "#A07B8A",
+        "image": "images/cl_254956701.jpg",
+        "isbn": "9791185521862",
+        "kdc": "331",
+        "price": 22000,
+        "pages": 408
+      },
+      {
+        "id": 26,
+        "title": "그래서 함수가 뭐예요?: 수학자가 들려주는 함수 이야기",
+        "author": "이한진",
+        "tags": ["수학", "과학"],
+        "description": "함수는 학교 수학 개념 중 가장 대표적이고 광범위하게 응용되는 개념이다. 왜 함수가 우리에게 필요한 지식인지 쉽게 설명한다.",
+        "excerpt": "함수는 세상을 이해하는 가장 강력한 도구다.",
+        "publisher": "컬처룩",
+        "color": "#8BA8A0",
+        "image": "images/cl_266254792.jpg",
+        "isbn": "9791185521893",
+        "kdc": "410",
+        "price": 15000,
+        "pages": 152
+      },
+      {
+        "id": 27,
+        "title": "수학이 쉬워지는 미술 놀이: 그리고 만들고 색칠하는 수학",
+        "author": "카린 트립, Karen Tripp",
+        "tags": ["수학", "예술"],
+        "description": "미술 시간처럼 작품을 만들고 놀이 활동을 통해 어린이가 수학을 배울 수 있게 하는 책이다.",
+        "excerpt": "미술과 함께라면 수학이 즐거워진다.",
+        "publisher": "컬처룩",
+        "color": "#8BA8A0",
+        "image": "images/cl_269950251.jpg",
+        "isbn": "9791185521923",
+        "kdc": "410",
+        "price": 14000,
+        "pages": 120
+      },
+      {
+        "id": 28,
+        "title": "미디어 알고리즘의 욕망: 자동화된 미디어는 우리의 일상을 어떻게 바꾸는가",
+        "author": "마크 안드레예비치, Mark Andrejevic",
+        "tags": ["미디어", "사회"],
+        "description": "자동화된 미디어의 전형적인 방식이 우리 일상에 얼마나 깊이 들어와 있는지를 보여 주며 이에 대해 좀 더 비판적인 시각을 가져야 한다고 이야기한다.",
+        "excerpt": "알고리즘은 우리의 욕망을 반영하는 거울이다.",
+        "publisher": "컬처룩",
+        "color": "#A07B8A",
+        "image": "images/cl_280534719.jpg",
+        "isbn": "9791185521992",
+        "kdc": "300",
+        "price": 24000,
+        "pages": 364
+      },
+      {
+        "id": 29,
+        "title": "미백: 피부색의 문화정치",
+        "author": "박소정",
+        "tags": ["미디어", "사회", "인종"],
+        "description": "미백이란 무엇인가라는 기본적인 질문으로 시작해, 다양한 층위의 질문으로 미백을 파고든다.",
+        "excerpt": "피부색은 생물학이 아니라 정치학이다.",
+        "publisher": "컬처룩",
+        "color": "#A07B8A",
+        "image": "images/cl_286406795.jpg",
+        "isbn": "9791192090030",
+        "kdc": "331",
+        "price": 24000,
+        "pages": 360
+      },
+      {
+        "id": 30,
+        "title": "레토릭의 역사와 이론",
+        "author": "제임스 A. 헤릭, James A. Herrick",
+        "tags": ["미디어", "역사"],
+        "description": "설득적 공적 담론이 어떻게 중요한 사회적 기능을 수행하고 우리의 일상생활에 영향을 미치는지를 알아본다.",
+        "excerpt": "말하기의 기술은 곧 세상을 움직이는 힘이다.",
+        "publisher": "컬처룩",
+        "color": "#A07B8A",
+        "image": "images/cl_289799994.jpg",
+        "isbn": "9791192090047",
+        "kdc": "802",
+        "price": 35000,
+        "pages": 628
+      },
+      {
+        "id": 31,
+        "title": "지중해에서 중세 유럽을 만나다: 십자군 유적지 여행",
+        "author": "임영호",
+        "tags": ["역사", "사회"],
+        "description": "십자군 유적지를 따라 중세 유럽의 역사를 여행한다.",
+        "excerpt": "십자군의 길을 따라가면 유럽의 역사가 보인다.",
+        "publisher": "컬처룩",
+        "color": "#B8A88A",
+        "image": "images/cl_296243591.jpg",
+        "isbn": "9791192090078",
+        "kdc": "920",
+        "price": 18000,
+        "pages": 264
+      },
+      {
+        "id": 32,
+        "title": "유럽과 소비에트 변방 기행: 조지아 우크라이나 벨라루스",
+        "author": "임영호",
+        "tags": ["역사", "사회"],
+        "description": "러시아의 우크라이나 침공 이전에 목격한 아름다움을 안타까움과 애잔함으로 담담하게 기록했다.",
+        "excerpt": "변방의 시선으로 바라본 유럽의 또 다른 얼굴.",
+        "publisher": "컬처룩",
+        "color": "#B8A88A",
+        "image": "images/cl_296244387.jpg",
+        "isbn": "9791192090085",
+        "kdc": "980",
+        "price": 22000,
+        "pages": 348
+      },
+      {
+        "id": 33,
+        "title": "장애와 텔레비전 문화: 디지털 시대의 재현, 접근, 수용",
+        "author": "케이티 엘리스, Katie Ellis",
+        "tags": ["미디어", "장애"],
+        "description": "장애인이 텔레비전을 비롯한 다양한 콘텐츠에서 어떻게 재현되고 있으며 어떻게 접근하는지를 분석한다.",
+        "excerpt": "재현은 권력이다. 누가 보여지고 누가 보여지지 않는가.",
+        "publisher": "컬처룩",
+        "color": "#A07B8A",
+        "image": "images/cl_297650087.jpg",
+        "isbn": "9791192090092",
+        "kdc": "331",
+        "price": 28000,
+        "pages": 364
+      },
+      {
+        "id": 34,
+        "title": "문화와 사회를 읽는 키워드: 레이먼드 윌리엄스 선집",
+        "author": "레이먼드 윌리엄스, Raymond Williams",
+        "tags": ["미디어", "사회"],
+        "description": "윌리엄스의 사회와 문화에 대한 사상 전반을 이해하는 훌륭한 길잡이가 되어 준다.",
+        "excerpt": "문화는 보통 사람들이 만드는 평범한 삶의 방식이다.",
+        "publisher": "컬처룩",
+        "color": "#A07B8A",
+        "image": "images/cl_312231068.jpg",
+        "isbn": "9791192090146",
+        "kdc": "331",
+        "price": 33000,
+        "pages": 524
+      },
+      {
+        "id": 35,
+        "title": "미디어 내러티브와 스토리텔링",
+        "author": "브론웬 토머스, Bronwen Thomas",
+        "tags": ["미디어", "사회"],
+        "description": "내러티브 이론의 본질에 관하여 우리가 접할 수 있는 최근 정보를 총망라하여 설명한다.",
+        "excerpt": "모든 미디어는 이야기를 통해 세상을 재구성한다.",
+        "publisher": "컬처룩",
+        "color": "#A07B8A",
+        "image": "images/cl_312747224.jpg",
+        "isbn": "9791192090160",
+        "kdc": "070",
+        "price": 22000,
+        "pages": 272
+      },
+      {
+        "id": 36,
+        "title": "더 단단한 질적 연구를 위한 안내서",
+        "author": "마리오 루이스 스몰, Mario Luis Small",
+        "tags": ["연구", "사회"],
+        "description": "질적 자료 수집의 실패 사례와 그 대처 방법을 통해 더 단단한 연구를 설계하는 실질적인 통찰을 제공한다.",
+        "excerpt": "좋은 연구는 질문의 질에서 시작된다.",
+        "publisher": "컬처룩",
+        "color": "#9EA8A0",
+        "image": "images/cl_324015113.jpg",
+        "isbn": "9791192090238",
+        "kdc": "301",
+        "price": 18000,
+        "pages": 312
+      },
+      {
+        "id": 37,
+        "title": "미디어와 시대정신의 탄생: 20세기 미디어 사상사",
+        "author": "대니얼 J. 치트럼, Daniel J. Czitrom",
+        "tags": ["미디어", "역사"],
+        "description": "20세기 전반기에 등장한 전신, 영화, 라디오 등의 미디어를 살펴보며 당시 사람들의 기대와 실제 사회 정착 과정을 탐구한다.",
+        "excerpt": "미디어는 시대의 정신을 반영하고 동시에 만든다.",
+        "publisher": "컬처룩",
+        "color": "#A07B8A",
+        "image": "images/cl_331620657.jpg",
+        "isbn": "9791192090252",
+        "kdc": "070",
+        "price": 28000,
+        "pages": 424
+      },
+      {
+        "id": 38,
+        "title": "영화, 물질적 유령",
+        "author": "질베르토 페레스, Gilberto Perez",
+        "tags": ["영화", "예술"],
+        "description": "저명한 영화학자이자 비평가인 질베르토 페레스가 영화 이론과 비평의 경계를 넘나들며 영화라는 물질적 유령이 우리에게 던지는 질문을 탐구한다.",
+        "excerpt": "영화 속 사물들은 말없이 이야기한다.",
+        "publisher": "컬처룩",
+        "color": "#7B8FA8",
+        "image": "images/cl_335867425.jpg",
+        "isbn": "9791192090368",
+        "kdc": "688",
+        "price": 38000,
+        "pages": 700,
+        "event": true
+      },
+      {
+        "id": 39,
+        "title": "의례를 통한 저항: 전후 영국의 청년 하위문화",
+        "author": "스튜어트 홀, Stuart Hall",
+        "tags": ["미디어", "사회"],
+        "description": "2차 세계 대전 이후 영국 사회의 청년 문화를 통해 의례와 저항의 관계를 분석한다.",
+        "excerpt": "옷 입는 방식조차 정치적 선언이 될 수 있다.",
+        "publisher": "컬처룩",
+        "color": "#A07B8A",
+        "image": "images/cl_342342486.jpg",
+        "isbn": "9791192090412",
+        "kdc": "331",
+        "price": 33000,
+        "pages": 536
+      },
+      {
+        "id": 40,
+        "title": "인종은 피부색이 아니다: 스튜어트 홀의 인종, 종족성, 민족 이론 강의",
+        "author": "스튜어트 홀, Stuart Hall",
+        "tags": ["미디어", "인종", "사회"],
+        "description": "인종이 피부색이 아닌 사회적 구성물임을 설득력 있게 보여 준다.",
+        "excerpt": "인종은 생물학적 사실이 아니라 사회적 구성물이다.",
+        "publisher": "컬처룩",
+        "color": "#A07B8A",
+        "image": "images/cl_351028047.jpg",
+        "isbn": "9791192090498",
+        "kdc": "332",
+        "price": 20000,
+        "pages": 268
+      },
+      {
+        "id": 41,
+        "title": "미장센과 영화 스타일: 고전기 할리우드에서 뉴 미디어 아트까지",
+        "author": "에이드리언 마틴, Adrian Martin",
+        "tags": ["영화", "미디어", "예술"],
+        "description": "고전기 할리우드는 물론 오늘날의 뉴 미디어 아트까지 아우르는 영화 스타일 분석을 제시한다.",
+        "excerpt": "모든 장면은 의미로 가득 차 있다.",
+        "publisher": "컬처룩",
+        "color": "#7B8FA8",
+        "image": "images/cl_366669165.jpg",
+        "isbn": "9791192090634",
+        "kdc": "688",
+        "price": 28000,
+        "pages": 496
+      },
+      {
+        "id": 42,
+        "title": "AI 시대에도 미분을 배워야 하나요?",
+        "author": "이한진",
+        "tags": ["수학", "과학", "AI", "자기계발"],
+        "description": "인공 지능이 복잡한 계산을 대신해 주니 수학을 배울 필요가 없다고들 한다. 그러나 세상을 읽고 사고할 수 있는 힘을 길러 주는 것이 바로 수학이다.",
+        "excerpt": "미분은 시대를 초월한 생각의 도구다.",
+        "publisher": "컬처룩",
+        "color": "#8BA8A0",
+        "image": "images/cl_ai_calc.jpg",
+        "isbn": "979-11-92090-71-9 04410",
+        "kdc": "410",
+        "price": 15000,
+        "pages": 128,
+        "event": true
+      },
+      {
+        "id": 43,
+        "title": "글로벌 플랫폼 시대의 K드라마",
+        "author": "이미나",
+        "tags": ["K문화", "미디어"],
+        "description": "K드라마 팬덤의 형성과 확산, 글로벌 플랫폼 속 정체성, OTT 시대의 유통 변화 등 다양한 주제를 깊이 있게 다룬다.",
+        "excerpt": "K드라마는 로컬에서 글로벌로, 문화의 힘을 증명한다.",
+        "publisher": "컬처룩",
+        "color": "#A89B8E",
+        "image": "images/cl_370931534.jpg",
+        "isbn": "9791192090658",
+        "kdc": "070",
+        "price": 24000,
+        "pages": 312
+      },
+      {
+        "id": 44,
+        "title": "진실은 여전히 저널리즘의 원칙인가",
+        "author": "정은령",
+        "tags": ["저널리즘", "미디어"],
+        "description": "디지털 시대 저널리즘의 위기와 진실의 의미를 근본적으로 재질문한다.",
+        "excerpt": "진실 추구는 저널리즘의 잃어버린 중심이다.",
+        "publisher": "컬처룩",
+        "color": "#A89B9E",
+        "image": "images/cl_372493915.jpg",
+        "isbn": "9791192090665",
+        "kdc": "070",
+        "price": 32000,
+        "pages": 544
+      },
+      {
+        "id": 45,
+        "title": "에코 체임버: 이론적 추적",
+        "author": "조항제",
+        "tags": ["미디어", "사회"],
+        "description": "에코 체임버가 공론장을 압박하는 구조적 메커니즘임을 밝히고 온라인에서 재생산되는 확신과 혐오를 해부한다.",
+        "excerpt": "우리는 우리가 듣고 싶은 말만 듣는다.",
+        "publisher": "컬처룩",
+        "color": "#A07B8A",
+        "image": "images/cl_378786417.jpg",
+        "isbn": "9791192090672",
+        "kdc": "331",
+        "price": 28000,
+        "pages": 428
+      },
+      {
+        "id": 46,
+        "title": "책임지지 않는 권력: 미디어의 진화, 그 권력 재편과 제도의 사회사",
+        "author": "제임스 커런, James Curran",
+        "tags": ["미디어", "사회", "저널리즘", "알고리즘"],
+        "description": "신문과 방송의 역사에서 오늘날 뉴 미디어와 AI에 이르기까지 미디어의 역사를 비판적으로 돌아본다.",
+        "excerpt": "미디어 권력의 진화는 민주주의의 시험대다.",
+        "publisher": "컬처룩",
+        "color": "#A07B8A",
+        "image": "images/cl_387880267.jpg",
+        "isbn": "9791192090696",
+        "kdc": "070",
+        "price": 48000,
+        "pages": 800,
+        "event": true
+      },
+      {
+        "id": 47,
+        "title": "K팝 댄스: 춤, 팬덤, 소셜 미디어",
+        "author": "오주연",
+        "tags": ["K문화", "미디어", "예술", "팬덤"],
+        "description": "커버 댄스와 춤 연습 영상으로 대표되는 K팝 댄스 문화가 팬덤과 소셜 미디어 속에서 어떻게 진화하는지 분석한다.",
+        "excerpt": "춤추는 몸은 가장 솔직한 문화의 언어다.",
+        "publisher": "컬처룩",
+        "color": "#A07B8A",
+        "image": "images/cl_390659915.jpg",
+        "isbn": "9791192090702",
+        "kdc": "685",
+        "price": 24000,
+        "pages": 348,
+        "event": true
+      }
+    ];
+
+    // ── Firebase ──
+    firebase.initializeApp({
+      apiKey: "AIzaSyBn6Thp7RK3Z-FtZ5GFcanEN_NtCxpcazA",
+      authDomain: "chaeksoop.firebaseapp.com",
+      projectId: "chaeksoop",
+      storageBucket: "chaeksoop.firebasestorage.app",
+      messagingSenderId: "389467273218",
+      appId: "1:389467273218:web:692866a85d5b05b4b8cf1b",
+      measurementId: "G-4EZFPN6M36"
+    });
+    const db = firebase.firestore();
+
+    // ── Ebook content (loaded lazily from external file for security) ──
+    let ebookContent = {};
+
+    function decodeBookData(encoded) {
+      const key = 'chaeksoop2024';
+      const raw = atob(encoded);
+      const len = raw.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) {
+        bytes[i] = raw.charCodeAt(i) ^ key.charCodeAt(i % key.length);
+      }
+      return JSON.parse(new TextDecoder().decode(bytes));
+    }
+
+    async function fetchBook(bookId) {
+      if (ebookContent[bookId]) return;
+      try {
+        const resp = await fetch(`data/books/${bookId}.json`);
+        const encoded = await resp.text();
+        ebookContent[bookId] = decodeBookData(encoded);
+      } catch {}
+    }
+    let eventFilterActive = false;
+    let activeTags = [];
+    let currentReaderBookId = null;
+    let readerTimerInterval = null;
+    let readerElapsedSeconds = 0;
+    let readerStarted = false;
+    let readerCompleted = false;
+    let readerContinueMode = false;
+    let readerHasScrolled = false;
+    let readChapters = {}; // bookId -> Set of indices read this session
+    let readerScrollThreshold = 0.3;
+    let completionPopupShown = false;
+
+    // ── Reviews ──
+    let reviewsCache = [];
+
+    async function loadReviews() {
+      // Migrate legacy localStorage reviews to Firestore (one-time)
+      try {
+        const legacy = JSON.parse(localStorage.getItem('chaeksoop_reviews'));
+        if (legacy && legacy.length > 0) {
+          const batch = db.batch();
+          legacy.forEach(r => {
+            const ref = db.collection('reviews').doc();
+            batch.set(ref, r);
+          });
+          await batch.commit();
+          localStorage.removeItem('chaeksoop_reviews');
+        }
+      } catch {}
+      const snapshot = await db.collection('reviews').orderBy('id', 'desc').get();
+      reviewsCache = snapshot.docs.map(d => ({ ...d.data(), _firebaseId: d.id }));
+    }
+
+    function getReviews() {
+      return reviewsCache;
+    }
+
+    async function saveReview(review) {
+      const docRef = await db.collection('reviews').add(review);
+      reviewsCache.unshift({ ...review, _firebaseId: docRef.id });
+    }
+
+    async function deleteReview(id) {
+      const snapshot = await db.collection('reviews').where('id', '==', id).get();
+      snapshot.forEach(d => d.ref.delete());
+      reviewsCache = reviewsCache.filter(r => r.id !== id);
+    }
+
+    // ── Messages ──
+    let messagesCache = [];
+
+    async function loadMessages() {
+      try {
+        const snapshot = await db.collection('messages').orderBy('createdAt', 'desc').get();
+        messagesCache = snapshot.docs.map(d => ({ ...d.data(), _firebaseId: d.id }));
+      } catch {
+        messagesCache = [];
+      }
+    }
+
+    function getMessages() {
+      return messagesCache;
+    }
+
+    async function saveMessage(msg) {
+      const docRef = await db.collection('messages').add(msg);
+      messagesCache.unshift({ ...msg, _firebaseId: docRef.id });
+    }
+
+    async function deleteMessage(id) {
+      const snapshot = await db.collection('messages').where('id', '==', id).get();
+      snapshot.forEach(d => d.ref.delete());
+      messagesCache = messagesCache.filter(m => m.id !== id);
+    }
+
+    function getInitials(title) {
+      const trimmed = title.replace(/[:\-_]/g, ' ').trim();
+      const chars = trimmed.split('');
+      for (let i = 0; i < chars.length; i++) {
+        const code = chars[i].charCodeAt(0);
+        if (code >= 0xAC00 && code <= 0xD7A3) {
+          return chars[i];
+        }
+      }
+      return chars[0] || '?';
+    }
+
+    const KDC_CATEGORIES = {
+      '070': '사회과학', '100': '인문학', '150': '인문학', '153': '인문학',
+      '180': '인문학', '186': '인문학', '300': '사회과학', '301': '사회과학',
+      '306': '사회과학', '310': '사회과학', '320': '사회과학', '330': '사회과학',
+      '331': '사회과학', '332': '사회과학', '340': '사회과학', '350': '사회과학',
+      '400': '과학', '410': '과학', '420': '과학', '430': '과학', '440': '과학',
+      '450': '과학', '460': '과학', '470': '과학', '472': '과학', '480': '과학',
+      '490': '과학', '500': '과학', '510': '과학', '520': '과학', '527': '과학',
+      '530': '과학', '540': '과학', '550': '과학', '560': '과학', '570': '과학',
+      '580': '과학', '590': '과학', '598': '과학',
+      '600': '예술/대중문화', '610': '예술/대중문화', '620': '예술/대중문화',
+      '630': '예술/대중문화', '640': '예술/대중문화', '650': '예술/대중문화',
+      '660': '예술/대중문화', '670': '예술/대중문화', '680': '예술/대중문화',
+      '685': '예술/대중문화', '688': '예술/대중문화',
+      '700': '언어', '710': '언어', '720': '언어', '730': '언어', '740': '언어',
+      '750': '언어', '760': '언어', '770': '언어', '780': '언어', '790': '언어',
+      '800': '인문학', '802': '인문학', '810': '인문학', '820': '인문학',
+      '830': '인문학', '840': '인문학', '850': '인문학', '860': '인문학',
+      '870': '인문학', '880': '인문학', '890': '인문학',
+      '900': '역사', '910': '역사', '920': '역사', '930': '역사', '940': '역사',
+      '950': '역사', '960': '역사', '980': '역사', '990': '역사',
+    };
+
+    const KDC_MAJOR = { '0': '총류', '1': '인문학', '2': '종교', '3': '사회과학',
+      '4': '과학', '5': '과학', '6': '예술/대중문화', '7': '언어', '8': '인문학', '9': '역사' };
+
+    function getKdcCategory(kdc) {
+      if (!kdc) return '';
+      const key = kdc.toString().padEnd(3, '0').slice(0, 3);
+      if (KDC_CATEGORIES[key]) return KDC_CATEGORIES[key];
+      return KDC_MAJOR[key[0]] || '';
+    }
+
+    function formatPrice(price) {
+      if (!price) return '';
+      return price.toLocaleString() + '원';
+    }
+
+    function openBookPopup(book) {
+      const overlay = document.getElementById('bookPopupOverlay');
+      const content = document.getElementById('bookPopupContent');
+      const category = getKdcCategory(book.kdc);
+      const priceStr = formatPrice(book.price);
+      const infoParts = [];
+      if (book.kdc && category) infoParts.push(`KDC ${book.kdc} · ${category}`);
+      else if (category) infoParts.push(`📂 ${category}`);
+      if (priceStr) infoParts.push(`💰 ${priceStr}`);
+      if (book.pages) infoParts.push(`📄 ${book.pages}쪽`);
+      if (book.isbn) infoParts.push(`🔖 ISBN: ${book.isbn}`);
+      const readBtnPopup = book.event
+        ? `<button class="read-btn popup-read-btn" data-book-id="${book.id}"><span class="read-btn-icon">⏱️</span> 잠깐 읽고 기대평 작성</button>`
+        : '';
+      content.innerHTML = `
+        <button class="book-popup-close" id="bookPopupCloseBtn">✕</button>
+        <div class="book-popup-cover" style="background:${book.color}">
+          ${book.image
+            ? `<img src="${book.image}" alt="${book.title}">`
+            : `<div class="book-popup-initials">${getInitials(book.title)}</div>`}
+        </div>
+        <div class="book-popup-info">
+          <h2 class="book-popup-title">${book.title}</h2>
+          ${book.titleEn ? `<p class="book-popup-titleen">${book.titleEn}</p>` : ''}
+          ${book.subtitle ? `<p class="book-popup-subtitle">${book.subtitle}</p>` : ''}
+          <p class="book-popup-author">${book.author}</p>
+          <div class="book-popup-meta">${infoParts.join(' · ')}</div>
+          <p class="book-popup-desc">${book.description}</p>
+          ${book.excerpt ? `<div class="book-popup-excerpt">${book.excerpt}</div>` : ''}
+          <p class="book-popup-publisher">${book.publisher}</p>
+          ${readBtnPopup}
+        </div>
+      `;
+      overlay.classList.add('open');
+      document.getElementById('bookPopupCloseBtn').addEventListener('click', () => {
+        overlay.classList.remove('open');
+      });
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) overlay.classList.remove('open');
+      });
+      const popupReadBtn = content.querySelector('.popup-read-btn');
+      if (popupReadBtn) {
+        popupReadBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          overlay.classList.remove('open');
+          openReader(book.id);
+        });
+      }
+    }
+
+    function createReviewFormHTML(bookId, bookTitle, isEvent, timeStr) {
+      const btnText = isEvent ? '기대평 남기고 굿즈 받기' : '기대평 남기기';
+      const checkboxText = isEvent
+        ? '개인정보 수집 및 굿즈 응모에 동의합니다'
+        : '';
+      const timeHtml = timeStr ? `<div class="review-read-time">⏱️ ${timeStr} 동안 읽었습니다</div>` : '';
+      return `
+        <form class="review-form" data-book-id="${bookId}" data-book-title="${bookTitle}" data-event="${isEvent}">
+          ${timeHtml}
+          <input type="text" class="review-input" placeholder="이름 또는 별명" maxlength="20" required>
+          <input type="email" class="review-input" placeholder="이메일 (선택)" maxlength="100">
+          <textarea class="review-textarea" placeholder="이 책에 대한 한 줄 기대평을 남겨주세요" maxlength="200" required></textarea>
+          <div class="review-char-count"><span class="review-count">0</span>/200</div>
+          ${isEvent ? `<label class="review-checkbox">
+            <input type="checkbox" required>
+            <span>${checkboxText}</span>
+          </label>` : ''}
+          <button type="submit" class="review-btn">${btnText}</button>
+        </form>
+      `;
+    }
+
+    // ── Open Reader ──
+    async function openReader(bookId) {
+      await fetchBook(bookId);
+      if (!ebookContent[bookId]) {
+        alert('이 책의 읽기 콘텐츠를 준비 중입니다.');
+        return;
+      }
+
+      const book = books.find(b => b.id === bookId);
+      if (!book) return;
+
+      currentReaderBookId = bookId;
+      readerElapsedSeconds = 0;
+      readerStarted = false;
+      readerCompleted = false;
+      readerContinueMode = false;
+      readerHasScrolled = false;
+      completionPopupShown = false;
+
+      history.pushState({ readerOpen: true, bookId }, '');
+      loadRandomChapter(bookId);
+
+      document.getElementById('readerNextChapter').style.display = 'block';
+      document.getElementById('readerEventReviewBtn').style.display = 'none';
+      document.getElementById('timerElapsed').textContent = '0:00';
+      document.getElementById('readerTimer').className = 'reader-timer';
+      document.getElementById('readerProgress').style.width = '0%';
+
+      // Show floating review button
+      document.getElementById('floatingStopBtn').classList.add('show');
+      document.getElementById('stopDrawer').classList.remove('open');
+      document.getElementById('stopDrawerOverlay').classList.remove('open');
+
+      // Reset completion popup
+      document.getElementById('completionPopup').classList.remove('open');
+
+      document.getElementById('readerOverlay').classList.add('open');
+      document.body.classList.add('reader-open');
+
+      // Scroll to top
+      document.getElementById('readerContent').scrollTop = 0;
+
+      // Start timer
+      if (readerTimerInterval) clearInterval(readerTimerInterval);
+      readerTimerInterval = setInterval(tickReaderTimer, 1000);
+    }
+
+    function closeReader() {
+      document.getElementById('readerOverlay').classList.remove('open');
+      document.body.classList.remove('reader-open');
+      if (readerTimerInterval) {
+        clearInterval(readerTimerInterval);
+        readerTimerInterval = null;
+      }
+      document.getElementById('completionPopup').classList.remove('open');
+      document.getElementById('floatingStopBtn').classList.remove('show');
+      currentReaderBookId = null;
+    }
+
+    // ── Reader Timer ──
+    function tickReaderTimer() {
+      readerElapsedSeconds++;
+      if (!readerStarted) {
+        readerStarted = true;
+      }
+
+      const mins = Math.floor(readerElapsedSeconds / 60);
+      const secs = readerElapsedSeconds % 60;
+      document.getElementById('timerElapsed').textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+      document.getElementById('readerProgress').style.width = Math.min(100, (readerElapsedSeconds / 30) * 100) + '%';
+
+      if (readerElapsedSeconds >= 30 && !readerCompleted) {
+        readerCompleted = true;
+        document.getElementById('readerTimer').classList.add('complete');
+        document.getElementById('readerEventReviewBtn').style.display = '';
+        checkCompletion();
+      }
+    }
+
+    // ── Reader Scroll Tracking ──
+    function handleReaderScroll() {
+      const overlay = document.getElementById('readerContent');
+      const scrollTop = overlay.scrollTop;
+      const scrollHeight = overlay.scrollHeight - overlay.clientHeight;
+      const scrollPercent = scrollHeight > 0 ? scrollTop / scrollHeight : 0;
+
+      if (scrollPercent > 0.1 && !readerHasScrolled) {
+        readerHasScrolled = true;
+      }
+
+      const nextBtn = document.getElementById('nextChapterBtn');
+      if (readerCompleted || nextBtn.style.display === 'none') {
+        document.getElementById('readerEventReviewBtn').style.display = '';
+      } else {
+        document.getElementById('readerEventReviewBtn').style.display = 'none';
+      }
+    }
+
+    function checkCompletion() {
+      if (readerCompleted && !completionPopupShown) {
+        completionPopupShown = true;
+        setTimeout(() => {
+          document.getElementById('completionPopup').classList.add('open');
+        }, 500);
+      }
+    }
+
+    // ── Continue Reading / Review Flow ──
+    function handleContinueReading() {
+      document.getElementById('completionPopup').classList.remove('open');
+    }
+
+    function loadRandomChapter(bookId) {
+      const content = ebookContent[bookId];
+      if (!content || !content.chapters.length) return;
+      if (!readChapters[bookId]) readChapters[bookId] = new Set();
+
+      const total = content.chapters.length;
+      const remaining = [];
+      for (let i = 0; i < total; i++) {
+        if (!readChapters[bookId].has(i)) remaining.push(i);
+      }
+      if (remaining.length === 0) {
+        document.getElementById('readerChapterTitle').textContent = '🎉 모든 이야기를 다 읽었습니다!';
+        const container = document.getElementById('readerParagraphs');
+        container.innerHTML = '<button class="reader-restart-btn" onclick="readChapters[' + bookId + ']=new Set();loadRandomChapter(' + bookId + ')">처음부터 다시 읽으려면 클릭해주세요</button>';
+        document.getElementById('nextChapterBtn').style.display = 'none';
+        document.getElementById('readerEventReviewBtn').style.display = '';
+        document.getElementById('readerContent').scrollTop = 0;
+        readerHasScrolled = true;
+        return;
+      }
+
+      const randomIdx = remaining[Math.floor(Math.random() * remaining.length)];
+      readChapters[bookId].add(randomIdx);
+      const chapter = content.chapters[randomIdx];
+      document.getElementById('readerChapterTitle').textContent = chapter.title;
+      const container = document.getElementById('readerParagraphs');
+      container.innerHTML = '';
+      const items = chapter.content || chapter.paragraphs.map(p => ({type: 'text', value: p}));
+      items.forEach(item => {
+        if (item.type === 'image') {
+          const wrap = document.createElement('div');
+          wrap.className = 'reader-image-wrap';
+          const img = document.createElement('img');
+          img.className = 'reader-image';
+          img.src = item.src;
+          img.alt = '';
+          img.loading = 'lazy';
+          wrap.appendChild(img);
+          container.appendChild(wrap);
+        } else {
+          const el = document.createElement('p');
+          el.className = 'reader-paragraph';
+          el.textContent = item.value;
+          container.appendChild(el);
+        }
+      });
+      document.getElementById('readerNextChapter').style.display = 'block';
+      document.getElementById('nextChapterBtn').style.display = '';
+      if (!readerCompleted) {
+        document.getElementById('readerEventReviewBtn').style.display = 'none';
+      }
+      document.getElementById('readerContent').scrollTop = 0;
+      readerHasScrolled = false;
+    }
+
+    function handleWriteReview() {
+      document.getElementById('completionPopup').classList.remove('open');
+      const bookId = currentReaderBookId;
+      const elapsed = readerElapsedSeconds;
+      closeReader();
+      openStopDrawer(bookId, elapsed);
+    }
+
+    function openStopDrawer(bookId, elapsedSeconds) {
+      const book = books.find(b => b.id === bookId);
+      if (!book) return;
+      const mins = Math.floor(elapsedSeconds / 60);
+      const secs = elapsedSeconds % 60;
+      const timeStr = elapsedSeconds > 0 ? `${mins}:${secs.toString().padStart(2, '0')}` : '';
+      const formHTML = createReviewFormHTML(book.id, book.title, book.event, timeStr);
+      document.getElementById('stopDrawerForm').innerHTML = formHTML;
+      document.getElementById('stopDrawer').classList.add('open');
+      document.getElementById('stopDrawerOverlay').classList.add('open');
+    }
+
+    function handleFloatingStop() {
+      const bookId = currentReaderBookId;
+      const elapsed = readerElapsedSeconds;
+      closeReader();
+      openStopDrawer(bookId, elapsed);
+    }
+
+    // ── Review Form Submit ──
+    function attachReviewSubmit() {
+      // Handled by document-level event delegation (handleReviewSubmit)
+    }
+
+    // ── Book Card ──
+    function createBookCard(book) {
+      const card = document.createElement('div');
+      card.className = 'book-card';
+      card.dataset.tags = book.tags.join(',');
+
+      const tagsHTML = book.tags.map(t => `<span class="book-tag">${t}</span>`).join('');
+      const titleEnHTML = book.titleEn ? `<p class="book-title-en">${book.titleEn}</p>` : '';
+      const subtitleHTML = book.subtitle ? `<p class="book-subtitle">${book.subtitle}</p>` : '';
+      const authorEnHTML = book.authorEn ? ` · ${book.authorEn}` : '';
+      const excerptHTML = book.excerpt ? `<div class="excerpt">${book.excerpt}</div>` : '';
+
+      const badgeHTML = book.event ? '<span class="event-badge">🎁</span>' : '';
+      const coverHTML = book.image
+        ? `<img src="${book.image}" alt="${book.title}" class="book-cover-img">`
+        : `<div class="book-cover-initials">${getInitials(book.title)}</div>`;
+
+      const readBtnHTML = book.event
+        ? `<button class="read-btn read-5min-btn" data-book-id="${book.id}"><span class="read-btn-icon">⏱️</span> 잠깐 읽고 기대평 작성</button>`
+        : '';
+
+      card.innerHTML = `
+        <div class="book-card-inner">
+          <div class="book-cover" style="background:${book.color}">
+            ${coverHTML}
+          </div>
+          <div class="book-info">
+            <div class="book-info-top">
+              <div>
+                <p class="book-title">${book.title}</p>
+                ${subtitleHTML}
+                ${titleEnHTML}
+                <p class="book-author">${book.author}${authorEnHTML}</p>
+              </div>
+              ${badgeHTML}
+            </div>
+            <div class="book-tags">${tagsHTML}</div>
+          </div>
+        </div>
+        <div class="book-detail">
+          <p>${book.description}</p>
+          ${excerptHTML}
+          <p class="publisher">${book.publisher}</p>
+          ${readBtnHTML}
+          <div class="book-reviews" data-book-id="${book.id}"></div>
+        </div>
+      `;
+
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('.review-form') || e.target.closest('.review-btn') || e.target.closest('.read-5min-btn') || e.target.closest('.read-btn') || e.target.closest('.event-badge')) return;
+        const wasExpanded = card.classList.contains('expanded');
+
+        // Collapse all expanded cards with height animation
+        document.querySelectorAll('.book-card.expanded').forEach(c => {
+          const d = c.querySelector('.book-detail');
+          if (d) d.style.height = '0';
+          c.classList.remove('expanded');
+        });
+
+        if (!wasExpanded) {
+          card.classList.add('expanded');
+          renderBookReviews(book.id);
+
+          // Animate height from 0 to full via JS (most reliable cross-browser)
+          requestAnimationFrame(() => {
+            const detail = card.querySelector('.book-detail');
+            detail.style.height = 'auto';
+            const fullHeight = detail.scrollHeight + 24;
+            detail.style.height = '0';
+            detail.offsetHeight;
+            detail.style.height = fullHeight + 'px';
+          });
+
+          // Scroll after height transition completes
+          setTimeout(() => {
+            const viewH = window.innerHeight;
+            const btn = card.querySelector('.read-5min-btn');
+            if (btn) {
+              const cardRect = card.getBoundingClientRect();
+              const btnRect = btn.getBoundingClientRect();
+              const padding = 80;
+              const targetMid = (cardRect.top + btnRect.bottom) / 2;
+              let scrollByAmount = targetMid - viewH / 2;
+              const maxScroll = cardRect.top - padding;
+              if (scrollByAmount > maxScroll) scrollByAmount = maxScroll;
+              const minScroll = btnRect.bottom - viewH;
+              if (scrollByAmount < minScroll) scrollByAmount = minScroll;
+              if (Math.abs(scrollByAmount) > 5) {
+                window.scrollBy({ top: scrollByAmount, behavior: 'smooth' });
+              }
+            } else {
+              const cardRect = card.getBoundingClientRect();
+              const excerpt = card.querySelector('.excerpt');
+              const padding = 80;
+              if (excerpt) {
+                const excerptRect = excerpt.getBoundingClientRect();
+                const targetMid = (cardRect.top + excerptRect.bottom) / 2;
+                let scrollByAmount = targetMid - viewH / 2;
+                const maxScroll = cardRect.top - padding;
+                if (scrollByAmount > maxScroll) scrollByAmount = maxScroll;
+                const minScroll = excerptRect.bottom - viewH;
+                if (scrollByAmount < minScroll) scrollByAmount = minScroll;
+                if (Math.abs(scrollByAmount) > 5) {
+                  window.scrollBy({ top: scrollByAmount, behavior: 'smooth' });
+                }
+              } else {
+                const top = card.getBoundingClientRect().top;
+                window.scrollBy({ top: top - viewH / 4, behavior: 'smooth' });
+              }
+            }
+          }, 450);
+        }
+      });
+
+      // 3분 읽기 button
+      const readBtn = card.querySelector('.read-5min-btn');
+      if (readBtn) {
+        readBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          openReader(book.id);
+        });
+      }
+
+      return card;
+    }
+
+    function renderBookReviews(bookId) {
+      const container = document.querySelector(`.book-reviews[data-book-id="${bookId}"]`);
+      if (!container) return;
+      const allReviews = getReviews().filter(r => r.bookId === bookId);
+      if (allReviews.length === 0) { container.innerHTML = ''; return; }
+      const shuffled = [...allReviews].sort(() => Math.random() - 0.5);
+      const selected = shuffled.slice(0, 3);
+      container.innerHTML = `
+        <div class="book-reviews-title">📖 독자 기대평</div>
+        ${selected.map(r => `
+          <div class="book-review-item">
+            <div class="book-review-text">"${r.text}"</div>
+            <div class="book-review-author">— ${r.name}</div>
+          </div>
+        `).join('')}
+      `;
+    }
+
+    // ── Render ──
+    function shuffle(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function renderBooks() {
+      const list = document.getElementById('bookList');
+      list.innerHTML = '';
+
+      let filtered;
+      if (eventFilterActive) {
+        filtered = books.filter(b => b.event);
+      } else {
+        filtered = activeTags.length === 0
+          ? books
+          : books.filter(book => book.tags.some(tag => activeTags.includes(tag)));
+      }
+
+      if (filtered.length === 0) {
+        list.innerHTML = '<div class="empty-state"><p>해당 키워드의 책이 없습니다.<br>다른 키워드를 선택해보세요.</p></div>';
+        return;
+      }
+
+      const events = shuffle(filtered.filter(b => b.event));
+      const nonEvents = shuffle(filtered.filter(b => !b.event));
+      filtered = [...events, ...nonEvents];
+
+      filtered.forEach(book => {
+        list.appendChild(createBookCard(book));
+      });
+    }
+
+    // ── Event Handlers ──
+    async function handleReviewSubmit(e) {
+      e.preventDefault();
+      const form = e.target;
+      const bookId = form.dataset.bookId;
+      const bookTitle = form.dataset.bookTitle;
+      const inputs = form.querySelectorAll('.review-input');
+      const name = inputs[0].value.trim() || '익명';
+      const email = inputs[1].value.trim() || '';
+      const text = form.querySelector('.review-textarea').value.trim();
+      if (!text || !name) return;
+
+      const review = {
+        id: Date.now(),
+        bookId: Number(bookId),
+        bookTitle,
+        name,
+        email,
+        text,
+        createdAt: new Date().toLocaleString('ko-KR')
+      };
+
+      await saveReview(review);
+      renderBookReviews(bookId);
+
+      const isEvent = form.dataset.event === 'true';
+
+      // Close stop drawer
+      document.getElementById('stopDrawer').classList.remove('open');
+      document.getElementById('stopDrawerOverlay').classList.remove('open');
+      document.getElementById('floatingStopBtn').classList.remove('show');
+
+      if (isEvent) {
+        showCelebration();
+      } else {
+        form.innerHTML = `
+          <div class="review-success">
+            <p class="review-success-icon">🎉</p>
+            <p class="review-success-text">기대평 감사합니다!</p>
+            <p class="review-success-sub">소중한 기대평 감사합니다</p>
+          </div>
+        `;
+      }
+    }
+
+    function showCelebration() {
+      document.getElementById('celebrationPopup').classList.add('open');
+      fireConfetti();
+      setTimeout(fireConfetti, 400);
+      setTimeout(fireConfetti, 800);
+    }
+
+    function closeCelebration() {
+      document.getElementById('celebrationPopup').classList.remove('open');
+      const canvas = document.getElementById('confettiCanvas');
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // ── Confetti ──
+    let confettiPieces = [];
+    let confettiAnimId = null;
+
+    function fireConfetti() {
+      const canvas = document.getElementById('confettiCanvas');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      const ctx = canvas.getContext('2d');
+      const colors = ['#A8C9A5', '#D4A574', '#7DAF7A', '#F5D76E', '#E8A87C', '#8B9E7A', '#F4A460', '#7B8FA8', '#C9A5A5'];
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+      for (let i = 0; i < 60; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 200 + Math.random() * 400;
+        confettiPieces.push({
+          x: cx + (Math.random() - 0.5) * 100,
+          y: cy + (Math.random() - 0.5) * 60,
+          vx: Math.cos(angle) * speed * (0.3 + Math.random() * 0.7),
+          vy: Math.sin(angle) * speed * (0.3 + Math.random() * 0.7) - 200,
+          w: 6 + Math.random() * 8,
+          h: 4 + Math.random() * 6,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          rot: Math.random() * 360,
+          rotV: (Math.random() - 0.5) * 10,
+          gravity: 400 + Math.random() * 200,
+          opacity: 1,
+        });
+      }
+      if (!confettiAnimId) animateConfetti();
+    }
+
+    function animateConfetti() {
+      const canvas = document.getElementById('confettiCanvas');
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      confettiPieces = confettiPieces.filter(p => {
+        p.x += p.vx * 0.016;
+        p.y += p.vy * 0.016;
+        p.vy += p.gravity * 0.016;
+        p.rot += p.rotV;
+        if (p.y > canvas.height + 50) return false;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot * Math.PI / 180);
+        ctx.globalAlpha = p.opacity;
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        ctx.restore();
+        return true;
+      });
+      if (confettiPieces.length > 0) {
+        confettiAnimId = requestAnimationFrame(animateConfetti);
+      } else {
+        confettiAnimId = null;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+
+    document.getElementById('celebrationOverlay').addEventListener('click', closeCelebration);
+    document.getElementById('celebrationCloseBtn').addEventListener('click', closeCelebration);
+
+    // ── DOM Events ──
+
+    // Form submission
+    document.addEventListener('submit', (e) => {
+      if (e.target.matches('.review-form')) {
+        handleReviewSubmit(e);
+      }
+    });
+
+    // Character count
+    document.addEventListener('input', (e) => {
+      if (e.target.matches('.review-textarea')) {
+        const count = e.target.value.length;
+        const counter = e.target.closest('.review-form').querySelector('.review-count');
+        if (counter) counter.textContent = count;
+      }
+    });
+
+    // Chips
+    const CHIP_TAGS = ['새', '자연', '식물', '에세이', '과학', '생태', '힐링', '영감', '그림책', '반려동물', '건강', '심리', '문학', '영화', '미디어', '수학', '예술', '역사', '사회', '인종', 'K문화', '창작', '창조성'];
+
+    function renderChips() {
+      const container = document.getElementById('chips');
+      const shuffled = [...CHIP_TAGS].sort(() => Math.random() - 0.5);
+      container.innerHTML = shuffled.map(t => `<span class="chip" data-tag="${t}">${t}</span>`).join('');
+    }
+
+    renderChips();
+    const chips = document.querySelectorAll('.chip');
+    const eventFilter = document.getElementById('eventFilter');
+
+    eventFilter.addEventListener('click', () => {
+      eventFilterActive = !eventFilterActive;
+      eventFilter.classList.toggle('active');
+      chips.forEach(c => c.classList.remove('active'));
+      activeTags = [];
+      updateFilterTrigger();
+      renderBooks();
+      buildCarousel(eventFilterActive);
+    });
+
+    chips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        eventFilterActive = false;
+        eventFilter.classList.remove('active');
+        const tag = chip.dataset.tag;
+        chip.classList.toggle('active');
+
+        activeTags = [];
+        chips.forEach(c => {
+          if (c.classList.contains('active')) {
+            activeTags.push(c.dataset.tag);
+          }
+        });
+
+        updateFilterTrigger();
+        renderBooks();
+        buildCarousel();
+      });
+    });
+
+    // Filter trigger & chips modal
+    function updateFilterTrigger() {
+      const text = document.getElementById('filterTriggerText');
+      const count = document.getElementById('filterTriggerCount');
+      if (activeTags.length > 0) {
+        text.textContent = activeTags.join(', ');
+        count.textContent = activeTags.length > 0 ? activeTags.length : '';
+        count.style.display = '';
+      } else {
+        text.textContent = '키워드로 검색';
+        count.style.display = 'none';
+      }
+    }
+
+    document.getElementById('filterTrigger').addEventListener('click', () => {
+      document.getElementById('chipsModal').classList.add('open');
+      document.getElementById('chipsModalOverlay').classList.add('open');
+    });
+
+    function closeChipsModal() {
+      document.getElementById('chipsModal').classList.remove('open');
+      document.getElementById('chipsModalOverlay').classList.remove('open');
+    }
+
+    document.getElementById('chipsModalOverlay').addEventListener('click', closeChipsModal);
+    document.getElementById('chipsModalClose').addEventListener('click', closeChipsModal);
+
+    // Reader back
+    document.getElementById('readerBack').addEventListener('click', closeReader);
+
+    // Browser back → close reader
+    window.addEventListener('popstate', () => {
+      if (document.getElementById('readerOverlay').classList.contains('open')) {
+        closeReader();
+      }
+    });
+
+    // Reader scroll
+    document.getElementById('readerContent').addEventListener('scroll', handleReaderScroll);
+
+    // Next chapter button
+    document.getElementById('nextChapterBtn').addEventListener('click', () => {
+      if (currentReaderBookId) loadRandomChapter(currentReaderBookId);
+    });
+
+    // Completion popup
+    document.getElementById('completionOverlay').addEventListener('click', () => {
+      document.getElementById('completionPopup').classList.remove('open');
+    });
+    document.getElementById('continueReadBtn').addEventListener('click', handleContinueReading);
+    document.getElementById('eventReviewBtn').addEventListener('click', handleWriteReview);
+    document.getElementById('readerEventReviewBtn')?.addEventListener('click', handleWriteReview);
+
+    // Floating stop button
+    document.getElementById('floatingStopBtn').addEventListener('click', handleFloatingStop);
+
+    // Stop drawer close
+    document.getElementById('stopDrawerOverlay').addEventListener('click', () => {
+      document.getElementById('stopDrawer').classList.remove('open');
+      document.getElementById('stopDrawerOverlay').classList.remove('open');
+    });
+
+    // Admin panel
+    let logoClickCount = 0;
+    let logoTimer = null;
+
+    document.getElementById('logo').addEventListener('click', () => {
+      logoClickCount++;
+      if (logoTimer) clearTimeout(logoTimer);
+      logoTimer = setTimeout(() => { logoClickCount = 0; }, 1000);
+
+      if (logoClickCount >= 5) {
+        logoClickCount = 0;
+        openAdmin();
+      }
+    });
+
+    function openAdmin(tab) {
+      const panel = document.getElementById('adminPanel');
+      const list = document.getElementById('adminList');
+      const title = document.getElementById('adminTitle');
+      tab = tab || 'reviews';
+
+      // Update tab buttons
+      document.querySelectorAll('.admin-tab').forEach(t => {
+        t.classList.toggle('active', t.dataset.tab === tab);
+      });
+
+      // Show/hide export button
+      document.getElementById('exportExcelBtn').style.display = tab === 'reviews' ? '' : 'none';
+
+      if (tab === 'reviews') {
+        title.textContent = '📋 기대평 관리';
+        const reviews = getReviews();
+        if (reviews.length === 0) {
+          list.innerHTML = '<p class="admin-empty">아직 기대평이 없습니다.</p>';
+        } else {
+          list.innerHTML = reviews.map(r => `
+            <div class="admin-item">
+              <input type="checkbox" class="admin-item-check" data-review-id="${r.id}">
+              <div class="admin-item-body">
+                <div class="admin-item-header">
+                  <strong>${r.name}</strong>
+                  ${r.email ? `<span class="admin-item-email">${r.email}</span>` : ''}
+                  <span class="admin-item-book">${r.bookTitle}</span>
+                  <span class="admin-item-date">${r.createdAt}</span>
+                </div>
+                <p class="admin-item-text">${r.text}</p>
+                <button class="admin-delete-btn" data-review-id="${r.id}">삭제</button>
+              </div>
+            </div>
+          `).join('');
+        }
+      } else {
+        title.textContent = '💬 메시지 관리';
+        const messages = getMessages();
+        if (messages.length === 0) {
+          list.innerHTML = '<p class="admin-empty">아직 메시지가 없습니다.</p>';
+        } else {
+          list.innerHTML = messages.map(m => {
+            const contactHtml = m.contact
+              ? `<a href="mailto:${m.contact}?subject=[책숲] 답변 드립니다" class="admin-msg-contact">📧 ${m.contact}</a>`
+              : `<span class="admin-msg-badge">연락처 없음</span>`;
+            return `
+            <div class="admin-item">
+              <input type="checkbox" class="admin-item-check" data-msg-id="${m.id}">
+              <div class="admin-item-body">
+                <div class="admin-item-header">
+                  <strong>${m.name || '익명'}</strong>
+                  ${contactHtml}
+                  <span class="admin-item-date">${m.createdAt}</span>
+                </div>
+                <p class="admin-item-text">${m.text}</p>
+                <button class="admin-delete-btn" data-msg-id="${m.id}">삭제</button>
+              </div>
+            </div>
+          `}).join('');
+        }
+      }
+
+      panel.classList.add('open');
+
+      // Bind delete buttons (single)
+      document.querySelectorAll('.admin-delete-btn').forEach(btn => {
+        btn.addEventListener('click', async function() {
+          const pw = prompt('관리자 암호를 입력하세요');
+          if (pw === 'spn3261182') {
+            if (tab === 'reviews') {
+              await deleteReview(parseInt(this.dataset.reviewId));
+            } else {
+              await deleteMessage(parseInt(this.dataset.msgId));
+            }
+            openAdmin(tab);
+          } else if (pw !== null) {
+            alert('암호가 틀렸습니다.');
+          }
+        });
+      });
+
+      // Bind batch selection
+      const checks = document.querySelectorAll('.admin-item-check');
+      const selectBtn = document.getElementById('adminSelectAllBtn');
+      const batchBtn = document.getElementById('adminBatchDeleteBtn');
+
+      function updateBatchBtn() {
+        const checked = document.querySelectorAll('.admin-item-check:checked');
+        batchBtn.disabled = checked.length === 0;
+        batchBtn.textContent = checked.length > 0 ? `선택 삭제 (${checked.length})` : '선택 삭제';
+      }
+
+      checks.forEach(c => c.addEventListener('change', updateBatchBtn));
+
+      selectBtn.onclick = () => {
+        const allChecked = checks.length > 0 && [...checks].every(c => c.checked);
+        checks.forEach(c => c.checked = !allChecked);
+        selectBtn.textContent = allChecked ? '전체 선택' : '선택 해제';
+        updateBatchBtn();
+      };
+
+      batchBtn.onclick = async () => {
+        const checked = [...document.querySelectorAll('.admin-item-check:checked')];
+        if (checked.length === 0) return;
+        const pw = prompt(`관리자 암호를 입력하세요 (${checked.length}개 삭제)`);
+        if (pw !== 'spn3261182') {
+          if (pw !== null) alert('암호가 틀렸습니다.');
+          return;
+        }
+        batchBtn.disabled = true;
+        batchBtn.textContent = '삭제 중...';
+        if (tab === 'reviews') {
+          for (const c of checked) {
+            await deleteReview(parseInt(c.dataset.reviewId));
+          }
+        } else {
+          for (const c of checked) {
+            await deleteMessage(parseInt(c.dataset.msgId));
+          }
+        }
+        openAdmin(tab);
+      };
+    }
+
+    function exportToExcel() {
+      const reviews = getReviews();
+      if (reviews.length === 0) { alert('내보낼 기대평이 없습니다.'); return; }
+      const pw = prompt('엑셀 파일 암호를 입력하세요');
+      if (pw === null) return;
+      const data = reviews.map(r => ({
+        ID: r.id,
+        도서명: r.bookTitle,
+        이름: r.name,
+        이메일: r.email || '',
+        기대평: r.text,
+        작성일: r.createdAt
+      }));
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(data);
+      XLSX.utils.book_append_sheet(wb, ws, '기대평');
+      try {
+        XLSX.writeFile(wb, '기대평_데이터.xlsx', { password: pw });
+      } catch {
+        XLSX.writeFile(wb, '기대평_데이터.xlsx');
+      }
+    }
+
+    // ── Message Modal ──
+    document.getElementById('floatingMsgBtn').addEventListener('click', () => {
+      document.getElementById('msgModal').classList.add('open');
+      document.getElementById('msgModalOverlay').classList.add('open');
+      document.getElementById('msgForm').style.display = '';
+      document.getElementById('msgSuccess').style.display = 'none';
+      document.getElementById('msgForm').reset();
+      document.getElementById('msgCount').textContent = '0';
+    });
+
+    function closeMsgModal() {
+      document.getElementById('msgModal').classList.remove('open');
+      document.getElementById('msgModalOverlay').classList.remove('open');
+    }
+
+    document.getElementById('msgModalOverlay').addEventListener('click', closeMsgModal);
+    document.getElementById('msgModalClose').addEventListener('click', closeMsgModal);
+
+    document.getElementById('msgText').addEventListener('input', function() {
+      document.getElementById('msgCount').textContent = this.value.length;
+    });
+
+    document.getElementById('msgForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const text = document.getElementById('msgText').value.trim();
+      if (!text) return;
+      const submitBtn = document.getElementById('msgSubmit');
+      submitBtn.disabled = true;
+      submitBtn.textContent = '전송 중...';
+      try {
+        await saveMessage({
+          id: Date.now(),
+          name: document.getElementById('msgName').value.trim() || '익명',
+          text,
+          contact: document.getElementById('msgContact').value.trim() || '',
+          createdAt: new Date().toLocaleString('ko-KR')
+        });
+        document.getElementById('msgForm').style.display = 'none';
+        document.getElementById('msgSuccess').style.display = '';
+      } catch {
+        alert('전송에 실패했습니다. 다시 시도해주세요.');
+      }
+      submitBtn.disabled = false;
+      submitBtn.textContent = '보내기';
+    });
+
+    document.getElementById('msgSuccessClose').addEventListener('click', closeMsgModal);
+
+    // ── Admin Tab Switching ──
+    document.getElementById('adminTabs').addEventListener('click', function(e) {
+      const tab = e.target.closest('.admin-tab');
+      if (!tab || tab.classList.contains('active')) return;
+      openAdmin(tab.dataset.tab);
+    });
+
+    document.getElementById('exportExcelBtn').addEventListener('click', exportToExcel);
+
+    document.getElementById('adminClose').addEventListener('click', () => {
+      document.getElementById('adminPanel').classList.remove('open');
+    });
+
+    document.querySelector('.admin-overlay').addEventListener('click', () => {
+      document.getElementById('adminPanel').classList.remove('open');
+    });
+
+    // ── Copy protection ──
+    document.addEventListener('copy', e => e.preventDefault());
+    document.addEventListener('cut', e => e.preventDefault());
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('selectstart', e => {
+      if (!e.target.closest('input, textarea')) e.preventDefault();
+    });
+    document.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'x' || e.key === 'C' || e.key === 'X')) {
+        e.preventDefault();
+      }
+    });
+
+    // ── Cover Carousel ──
+    function buildCarousel(eventOnly) {
+      const track = document.getElementById('coverCarouselTrack');
+      let pool = eventOnly ? books.filter(b => b.event) : books;
+      const shuffled = [...pool].sort(() => Math.random() - 0.5);
+      const items = shuffled.map(b => `
+        <div class="cover-carousel-item" data-book-id="${b.id}">
+          <img src="${b.image}" alt="${b.title}" loading="lazy">
+          <div class="cover-carousel-title">${b.title}</div>
+        </div>
+      `).join('');
+      if (eventOnly) {
+        track.innerHTML = items;
+        track.style.width = '100%';
+        track.style.justifyContent = 'center';
+        track.style.animation = 'none';
+      } else {
+        track.innerHTML = items + items;
+        track.style.width = '';
+        track.style.justifyContent = '';
+        track.style.animation = '';
+        track.style.animationDelay = '-' + (Math.random() * 60) + 's';
+      }
+      track.classList.toggle('paused', !!eventOnly);
+      track.querySelectorAll('.cover-carousel-item').forEach(el => {
+        el.addEventListener('click', () => {
+          const id = parseInt(el.dataset.bookId);
+          const book = books.find(b => b.id === id);
+          if (book) openBookPopup(book);
+        });
+      });
+    }
+
+    // ── Book List Excel Download ──
+    function exportBookList() {
+      const pw = prompt('엑셀 파일 암호를 입력하세요');
+      if (pw === null) return;
+      const data = books.map(b => ({
+        ID: b.id,
+        제목: b.title,
+        '제목 (영문)': b.titleEn || '',
+        부제: b.subtitle || '',
+        저자: b.author,
+        '저자 (영문)': b.authorEn || '',
+        출판사: b.publisher,
+        ISBN: b.isbn || '',
+        '분류기호(KDC)': b.kdc || '',
+        정가: b.price || '',
+        쪽수: b.pages || '',
+        태그: b.tags.join(', '),
+        설명: b.description,
+        '책 속 한 줄': b.excerpt,
+        이벤트: b.event ? 'O' : ''
+      }));
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(data);
+      XLSX.utils.book_append_sheet(wb, ws, '도서목록');
+      try {
+        XLSX.writeFile(wb, '책숲_도서목록.xlsx', { password: pw });
+      } catch {
+        XLSX.writeFile(wb, '책숲_도서목록.xlsx');
+      }
+    }
+
+    document.getElementById('floatingDownloadBtn').addEventListener('click', exportBookList);
+
+    // ── Init ──
+    (async () => {
+      await loadReviews();
+      await loadMessages();
+      buildCarousel();
+      renderBooks();
+    })();
+  </script>
+
+</body>
+</html>
