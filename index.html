@@ -1590,25 +1590,7 @@
 
       card.addEventListener('click', (e) => {
         if (e.target.closest('.review-form') || e.target.closest('.review-btn') || e.target.closest('.read-5min-btn') || e.target.closest('.read-btn') || e.target.closest('.event-badge')) return;
-        const wasExpanded = card.classList.contains('expanded');
-
-        document.querySelectorAll('.book-card.expanded').forEach(c => {
-          const d = c.querySelector('.book-detail');
-          if (d) d.style.height = '0';
-          c.classList.remove('expanded');
-        });
-
-        if (!wasExpanded) {
-          card.classList.add('expanded');
-          requestAnimationFrame(() => {
-            const detail = card.querySelector('.book-detail');
-            detail.style.height = 'auto';
-            const fullHeight = detail.scrollHeight + 24;
-            detail.style.height = '0';
-            detail.offsetHeight;
-            detail.style.height = fullHeight + 'px';
-          });
-        }
+        openBookPopup(book);
       });
 
       // 3분 읽기 button
