@@ -1572,20 +1572,20 @@ body.reader-open {
 .brand-logo-left,
 .brand-logo-right {
   display: block;
-  width: 120px;
-  height: 36px;
-  background-image: url(images/logo.png);
+  width: 140px;
+  height: 40px;
   background-repeat: no-repeat;
-  background-size: cover;
+  background-size: contain;
+  background-position: center;
   flex-shrink: 0;
 }
 
 .brand-logo-left {
-  background-position: 0 0;
+  background-image: url(images/culturelook.png);
 }
 
 .brand-logo-right {
-  background-position: 0 100%;
+  background-image: url(images/cocoon.png);
 }
 
 .booth-info {
