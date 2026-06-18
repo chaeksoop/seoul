@@ -109,7 +109,7 @@
     </div>
     <div class="reader-next-chapter" id="readerNextChapter" style="display:none">
       <div class="next-chapter-btn-row">
-        <button class="next-chapter-btn" id="nextChapterBtn">📖 다른 챕터 읽기</button>
+        <button class="next-chapter-btn" id="nextChapterBtn">📖 다음 읽기</button>
         <button class="next-chapter-btn next-chapter-btn-accent" id="readerEventReviewBtn">🎁 기대평 쓰고 이벤트 굿즈 받기</button>
       </div>
     </div>
@@ -1275,7 +1275,7 @@
       if (book.pages) infoParts.push(`📄 ${book.pages}쪽`);
       if (book.isbn) infoParts.push(`🔖 ISBN: ${book.isbn}`);
       const readBtnPopup = book.event
-        ? `<button class="read-btn popup-read-btn" data-book-id="${book.id}"><span class="read-btn-icon">⏱️</span> 책 읽고 기대평 작성</button>`
+        ? `<button class="read-btn popup-read-btn" data-book-id="${book.id}"><span class="read-btn-icon">⏱️</span> 기대평 작성하고 이벤트 참여하기</button>`
         : '';
       content.innerHTML = `
         <button class="book-popup-close" id="bookPopupCloseBtn">✕</button>
@@ -1353,6 +1353,8 @@
       readerContinueMode = false;
       completionPopupShown = false;
 
+      document.getElementById('readerTitle').textContent = book.title;
+      document.getElementById('readerAuthor').textContent = book.author;
       loadRandomChapter(bookId);
 
       document.getElementById('readerNextChapter').style.display = 'block';
@@ -1564,7 +1566,7 @@
         : `<div class="book-cover-initials">${getInitials(book.title)}</div>`;
 
       const readBtnHTML = book.event
-        ? `<button class="read-btn read-5min-btn" data-book-id="${book.id}"><span class="read-btn-icon">⏱️</span> 책 읽고 기대평 작성</button>`
+        ? `<button class="read-btn read-5min-btn" data-book-id="${book.id}"><span class="read-btn-icon">⏱️</span> 기대평 작성하고 이벤트 참여하기</button>`
         : '';
 
       card.innerHTML = `
