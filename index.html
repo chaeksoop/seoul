@@ -38,7 +38,7 @@
 
         <button class="filter-trigger" id="filterTrigger">
       <span class="filter-trigger-icon">🔍</span>
-      <span class="filter-trigger-text" id="filterTriggerText">키워드로 검색</span>
+      <span class="filter-trigger-text" id="filterTriggerText">키워드를 선택하면 해당 도서가 아래 나타나요</span>
       <span class="filter-trigger-count" id="filterTriggerCount"></span>
     </button>
 
@@ -1707,13 +1707,15 @@
       const list = document.getElementById('bookList');
       list.innerHTML = '';
 
+      if (!eventFilterActive && activeTags.length === 0) {
+        list.innerHTML = '<div class="empty-state"><p>🔍 키워드를 선택하거나<br>🎁 이벤트를 클릭하면<br>해당 도서가 아래 나타납니다</p></div>';
+        return;
+      }
       let filtered;
       if (eventFilterActive) {
         filtered = books.filter(b => b.event);
       } else {
-        filtered = activeTags.length === 0
-          ? books
-          : books.filter(book => book.tags.some(tag => activeTags.includes(tag)));
+        filtered = books.filter(book => book.tags.some(tag => activeTags.includes(tag)));
       }
 
       if (filtered.length === 0) {
@@ -1841,7 +1843,7 @@
         count.textContent = activeTags.length > 0 ? activeTags.length : '';
         count.style.display = '';
       } else {
-        text.textContent = '키워드로 검색';
+        text.textContent = '키워드를 선택하면 해당 도서가 아래 나타나요';
         count.style.display = 'none';
       }
     }
