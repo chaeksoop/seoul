@@ -1577,14 +1577,14 @@ body.reader-open {
 }
 
 .brand-logo-left {
-  width: 140px;
+  width: 90px;
   background-image: url(../images/culturelook.png);
   background-position: right center;
   justify-self: start;
 }
 
 .brand-logo-right {
-  width: 140px;
+  width: 90px;
   background-image: url(../images/cocoon.png);
   background-position: left center;
   justify-self: end;
