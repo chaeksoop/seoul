@@ -2148,7 +2148,7 @@
     });
 
     // ── Cover Carousel ──
-    let carouselState = { isDown: false, startX: 0, startPos: 0, autoResume: null };
+    let carouselState = { isDown: false, startX: 0, startPos: 0, autoResume: null, hadAnim: false };
 
     function getCurrentX(el) {
       const m = window.getComputedStyle(el).transform.match(/matrix.*\((.+)\)/);
@@ -2161,13 +2161,35 @@
       const track = document.getElementById('coverCarouselTrack');
       if (!track) return;
 
-      function pause() { track.style.animationPlayState = 'paused'; }
-      function resume() { track.style.animationPlayState = ''; }
+      function pauseAnim() {
+        carouselState.hadAnim = window.getComputedStyle(track).animationName !== 'none';
+        const pos = getCurrentX(track);
+        track.style.transform = `translateX(${pos}px)`;
+        track.style.animation = 'none';
+      }
+
+      function resumeAnim() {
+        if (!carouselState.hadAnim) {
+          track.style.transform = '';
+          return;
+        }
+        const pos = getCurrentX(track);
+        const halfW = track.scrollWidth / 2;
+        if (halfW > 0) {
+          const progress = Math.min(1, Math.max(0, (-pos) / halfW));
+          const delay = -(progress * 60);
+          track.style.transform = '';
+          track.style.animation = 'none';
+          void track.offsetHeight;
+          track.style.animation = 'carouselScroll 60s linear infinite';
+          track.style.animationDelay = `${delay}s`;
+        }
+      }
 
       function scheduleResume() {
         clearTimeout(carouselState.autoResume);
         carouselState.autoResume = setTimeout(() => {
-          if (!carouselState.isDown) resume();
+          if (!carouselState.isDown) resumeAnim();
         }, 4000);
       }
 
@@ -2175,7 +2197,7 @@
         carouselState.isDown = true;
         carouselState.startX = e.pageX - track.offsetLeft;
         carouselState.startPos = getCurrentX(track);
-        pause();
+        pauseAnim();
         clearTimeout(carouselState.autoResume);
         track.style.cursor = 'grabbing';
       });
@@ -2196,7 +2218,7 @@
         carouselState.isDown = true;
         carouselState.startX = e.touches[0].pageX - track.offsetLeft;
         carouselState.startPos = getCurrentX(track);
-        pause();
+        pauseAnim();
         clearTimeout(carouselState.autoResume);
       }, { passive: true });
       track.addEventListener('touchmove', (e) => {
