@@ -970,11 +970,18 @@ body.reader-open {
 }
 
 .reader-next-chapter {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
   display: flex;
   flex-direction: column;
   gap: 10px;
   align-items: center;
-  padding: 12px 0 8px;
+  padding: 12px 20px;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+  background: linear-gradient(to top, rgba(255,255,255,0.95) 60%, transparent);
+  z-index: 10;
 }
 
 .next-chapter-btn-row {

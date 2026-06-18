@@ -101,11 +101,11 @@
     <div class="reader-content" id="readerContent">
       <div class="reader-chapter-title" id="readerChapterTitle"></div>
       <div id="readerParagraphs"></div>
-      <div class="reader-next-chapter" id="readerNextChapter" style="display:none">
-        <div class="next-chapter-btn-row">
-          <button class="next-chapter-btn" id="nextChapterBtn">📖 다른 챕터 읽기</button>
-          <button class="next-chapter-btn next-chapter-btn-accent" id="readerEventReviewBtn">🎁 기대평 쓰고 이벤트 굿즈 받기</button>
-        </div>
+    </div>
+    <div class="reader-next-chapter" id="readerNextChapter" style="display:none">
+      <div class="next-chapter-btn-row">
+        <button class="next-chapter-btn" id="nextChapterBtn">📖 다른 챕터 읽기</button>
+        <button class="next-chapter-btn next-chapter-btn-accent" id="readerEventReviewBtn">🎁 기대평 쓰고 이벤트 굿즈 받기</button>
       </div>
     </div>
   </div>
@@ -1737,37 +1737,35 @@
     }
 
     renderChips();
-    const chips = document.querySelectorAll('.chip');
     const eventFilter = document.getElementById('eventFilter');
 
     eventFilter.addEventListener('click', () => {
       eventFilterActive = !eventFilterActive;
       eventFilter.classList.toggle('active');
-      chips.forEach(c => c.classList.remove('active'));
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
       activeTags = [];
       updateFilterTrigger();
       renderBooks();
       buildCarousel(eventFilterActive);
     });
 
-    chips.forEach(chip => {
-      chip.addEventListener('click', () => {
-        eventFilterActive = false;
-        eventFilter.classList.remove('active');
-        const tag = chip.dataset.tag;
-        chip.classList.toggle('active');
+    document.getElementById('chips').addEventListener('click', (e) => {
+      const chip = e.target.closest('.chip');
+      if (!chip) return;
+      eventFilterActive = false;
+      eventFilter.classList.remove('active');
+      chip.classList.toggle('active');
 
-        activeTags = [];
-        chips.forEach(c => {
-          if (c.classList.contains('active')) {
-            activeTags.push(c.dataset.tag);
-          }
-        });
-
-        updateFilterTrigger();
-        renderBooks();
-        buildCarousel();
+      activeTags = [];
+      document.querySelectorAll('.chip').forEach(c => {
+        if (c.classList.contains('active')) {
+          activeTags.push(c.dataset.tag);
+        }
       });
+
+      updateFilterTrigger();
+      renderBooks();
+      buildCarousel();
     });
 
     // Filter trigger & chips modal
@@ -1785,6 +1783,7 @@
     }
 
     document.getElementById('filterTrigger').addEventListener('click', () => {
+      renderChips();
       document.getElementById('chipsModal').classList.add('open');
       document.getElementById('chipsModalOverlay').classList.add('open');
     });
