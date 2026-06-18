@@ -2189,44 +2189,29 @@ body.reader-open .floating-stop-btn {
   100% { transform: translateX(-50%); }
 }
 
-/* ── Floating Download Button ── */
-.floating-download-btn {
-  position: fixed;
-  bottom: 122px;
-  right: 16px;
-  z-index: 100;
+/* ── Download Bar ── */
+.download-bar-btn {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  padding: 10px 16px;
-  background: #8B9E7A;
-  color: #fff;
-  border: none;
-  border-radius: 28px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  width: 100%;
+  padding: 6px 12px;
+  margin: 0 0 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
   font-family: inherit;
+  color: #8AAB8A;
+  background: rgba(168, 201, 165, 0.08);
+  border: 1px solid rgba(168, 201, 165, 0.2);
+  border-radius: 8px;
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(139, 158, 122, 0.4);
   transition: all 0.2s;
   -webkit-tap-highlight-color: transparent;
 }
 
-.floating-download-btn:hover {
-  background: #7A8D6A;
-  transform: scale(1.03);
-}
-
-.floating-download-btn-label {
-  display: none;
-}
-
-body.reader-open .floating-download-btn {
-  display: none;
-}
-
-@media (min-width: 480px) {
-  .floating-download-btn-label {
-    display: inline;
-  }
+.download-bar-btn:hover {
+  background: rgba(168, 201, 165, 0.15);
+  color: #6B9E78;
+  border-color: rgba(168, 201, 165, 0.35);
 }
