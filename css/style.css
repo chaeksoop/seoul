@@ -1559,33 +1559,35 @@ body.reader-open {
 
 /* ── Brand Bar ── */
 .brand-bar {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: center;
-  gap: 14px;
+  gap: 10px;
   padding: 20px 0 18px;
   position: relative;
   z-index: 1;
-  flex-wrap: wrap;
 }
 
 .brand-logo-left,
 .brand-logo-right {
   display: block;
-  width: 140px;
   height: 40px;
   background-repeat: no-repeat;
   background-size: contain;
-  background-position: center;
-  flex-shrink: 0;
 }
 
 .brand-logo-left {
+  width: 140px;
   background-image: url(images/culturelook.png);
+  background-position: right center;
+  justify-self: start;
 }
 
 .brand-logo-right {
+  width: 140px;
   background-image: url(images/cocoon.png);
+  background-position: left center;
+  justify-self: end;
 }
 
 .booth-info {
