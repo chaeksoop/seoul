@@ -1708,7 +1708,7 @@
       list.innerHTML = '';
 
       if (!eventFilterActive && activeTags.length === 0) {
-        list.innerHTML = '<div class="empty-state"><p>🔍 키워드를 선택하거나<br>🎁 이벤트를 클릭하면<br>해당 도서가 아래 나타납니다</p></div>';
+        list.innerHTML = '';
         return;
       }
       let filtered;
@@ -1799,7 +1799,7 @@
     function renderChips() {
       const container = document.getElementById('chips');
       const shuffled = [...CHIP_TAGS].sort(() => Math.random() - 0.5);
-      container.innerHTML = shuffled.map(t => `<span class="chip" data-tag="${t}">${t}</span>`).join('');
+      container.innerHTML = shuffled.map(t => `<span class="chip${activeTags.includes(t) ? ' active' : ''}" data-tag="${t}">${t}</span>`).join('');
     }
 
     renderChips();
