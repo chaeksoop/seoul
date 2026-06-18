@@ -2192,6 +2192,22 @@
         }, 4000);
       }
 
+      function getStep(el) {
+        const ch = el.querySelectorAll('.cover-carousel-item');
+        return ch.length > 1 ? ch[1].offsetLeft - ch[0].offsetLeft : 84;
+      }
+
+      function wrapDrag(x, pageX) {
+        const step = getStep(track);
+        const half = track.querySelectorAll('.cover-carousel-item').length / 2;
+        const setW = step * half;
+        if (half < 1) return;
+        let pos = carouselState.startPos + (pageX - carouselState.startX) * 1.5;
+        if (pos > 0) { pos -= setW; carouselState.startX = x; carouselState.startPos = pos; }
+        if (pos < -setW) { pos += setW; carouselState.startX = x; carouselState.startPos = pos; }
+        track.style.transform = `translateX(${pos}px)`;
+      }
+
       track.addEventListener('mousedown', (e) => {
         carouselState.isDown = true;
         carouselState.startX = e.pageX - track.offsetLeft;
@@ -2202,9 +2218,7 @@
       });
       document.addEventListener('mousemove', (e) => {
         if (!carouselState.isDown) return;
-        const x = e.pageX - track.offsetLeft;
-        const dx = (x - carouselState.startX) * 1.5;
-        track.style.transform = `translateX(${carouselState.startPos + dx}px)`;
+        wrapDrag(e.pageX - track.offsetLeft, e.pageX);
       });
       document.addEventListener('mouseup', () => {
         if (!carouselState.isDown) return;
@@ -2222,9 +2236,7 @@
       }, { passive: true });
       track.addEventListener('touchmove', (e) => {
         if (!carouselState.isDown) return;
-        const x = e.touches[0].pageX - track.offsetLeft;
-        const dx = (x - carouselState.startX) * 1.5;
-        track.style.transform = `translateX(${carouselState.startPos + dx}px)`;
+        wrapDrag(e.touches[0].pageX - track.offsetLeft, e.touches[0].pageX);
       }, { passive: true });
       track.addEventListener('touchend', () => {
         carouselState.isDown = false;
