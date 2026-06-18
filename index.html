@@ -1607,8 +1607,43 @@
             detail.style.height = '0';
             detail.offsetHeight;
             detail.style.height = fullHeight + 'px';
-            setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
           });
+          setTimeout(() => {
+            const viewH = window.innerHeight;
+            const btn = card.querySelector('.read-5min-btn');
+            if (btn) {
+              const cardRect = card.getBoundingClientRect();
+              const btnRect = btn.getBoundingClientRect();
+              const padding = 80;
+              const targetMid = (cardRect.top + btnRect.bottom) / 2;
+              let scrollByAmount = targetMid - viewH / 2;
+              const maxScroll = cardRect.top - padding;
+              if (scrollByAmount > maxScroll) scrollByAmount = maxScroll;
+              const minScroll = btnRect.bottom - viewH;
+              if (scrollByAmount < minScroll) scrollByAmount = minScroll;
+              if (Math.abs(scrollByAmount) > 5) {
+                window.scrollBy({ top: scrollByAmount, behavior: 'smooth' });
+              }
+            } else {
+              const cardRect = card.getBoundingClientRect();
+              const excerpt = card.querySelector('.excerpt');
+              const padding = 80;
+              if (excerpt) {
+                const excerptRect = excerpt.getBoundingClientRect();
+                const targetMid = (cardRect.top + excerptRect.bottom) / 2;
+                let scrollByAmount = targetMid - viewH / 2;
+                const maxScroll = cardRect.top - padding;
+                if (scrollByAmount > maxScroll) scrollByAmount = maxScroll;
+                const minScroll = excerptRect.bottom - viewH;
+                if (scrollByAmount < minScroll) scrollByAmount = minScroll;
+                if (Math.abs(scrollByAmount) > 5) {
+                  window.scrollBy({ top: scrollByAmount, behavior: 'smooth' });
+                }
+              } else {
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }
+            }
+          }, 300);
         }
       });
 
