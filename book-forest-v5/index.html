@@ -102,7 +102,6 @@
     <div class="reader-content" id="readerContent">
       <div class="reader-chapter-title" id="readerChapterTitle"></div>
       <div id="readerParagraphs"></div>
-      <div class="reader-scroll-hint" id="scrollHint">👇 계속 내려서 읽어보세요</div>
       <div class="reader-next-chapter" id="readerNextChapter" style="display:none">
         <div class="next-chapter-btn-row">
           <button class="next-chapter-btn" id="nextChapterBtn">📖 다른 챕터 읽기</button>
@@ -1134,9 +1133,7 @@
     let readerStarted = false;
     let readerCompleted = false;
     let readerContinueMode = false;
-    let readerHasScrolled = false;
     let readChapters = {}; // bookId -> Set of indices read this session
-    let readerScrollThreshold = 0.3;
     let completionPopupShown = false;
 
     // ── Reviews ──
@@ -1320,17 +1317,15 @@
       readerStarted = false;
       readerCompleted = false;
       readerContinueMode = false;
-      readerHasScrolled = false;
       completionPopupShown = false;
 
       loadRandomChapter(bookId);
 
-      const hasMultiple = ebookContent[bookId] && ebookContent[bookId].chapters.length > 1;
-      document.getElementById('readerNextChapter').style.display = hasMultiple ? 'none' : 'none';
+      document.getElementById('readerNextChapter').style.display = 'block';
+      document.getElementById('readerEventReviewBtn').style.display = 'none';
       document.getElementById('timerElapsed').textContent = '0:00';
       document.getElementById('readerTimer').className = 'reader-timer';
       document.getElementById('readerProgress').style.width = '0%';
-      document.getElementById('scrollHint').classList.remove('hidden');
 
       // Show floating review button
       document.getElementById('floatingStopBtn').classList.add('show');
@@ -1378,7 +1373,6 @@
       if (readerElapsedSeconds >= 30 && !readerCompleted) {
         readerCompleted = true;
         document.getElementById('readerTimer').classList.add('complete');
-        document.getElementById('readerNextChapter').style.display = 'block';
         document.getElementById('readerEventReviewBtn').style.display = '';
         checkCompletion();
       }
@@ -1386,34 +1380,11 @@
 
     // ── Reader Scroll Tracking ──
     function handleReaderScroll() {
-      const overlay = document.getElementById('readerContent');
-      const scrollTop = overlay.scrollTop;
-      const scrollHeight = overlay.scrollHeight - overlay.clientHeight;
-      const scrollPercent = scrollHeight > 0 ? scrollTop / scrollHeight : 0;
-
-      if (scrollPercent > 0.1 && !readerHasScrolled) {
-        readerHasScrolled = true;
-        document.getElementById('scrollHint').classList.add('hidden');
-      }
-
-      // Show "다른 챕터 읽기" when near bottom (past 80%)
-      if (scrollPercent > 0.8) {
-        const btn = document.getElementById('readerNextChapter');
-        if (btn.style.display === 'none' && currentReaderBookId) {
-          btn.style.display = 'block';
-        }
-      }
-
-      // Show review button after 3 minutes or when all chapters are read
       const nextBtn = document.getElementById('nextChapterBtn');
       if (readerCompleted || nextBtn.style.display === 'none') {
         document.getElementById('readerEventReviewBtn').style.display = '';
       } else {
         document.getElementById('readerEventReviewBtn').style.display = 'none';
-      }
-
-      if (readerCompleted && !completionPopupShown) {
-        checkCompletion();
       }
     }
 
@@ -1449,8 +1420,6 @@
         document.getElementById('readerEventReviewBtn').style.display = '';
         document.getElementById('readerNextChapter').style.display = 'block';
         document.getElementById('readerContent').scrollTop = 0;
-        document.getElementById('scrollHint').classList.add('hidden');
-        readerHasScrolled = true;
         return;
       }
 
@@ -1479,11 +1448,12 @@
           container.appendChild(el);
         }
       });
-      document.getElementById('readerNextChapter').style.display = 'none';
-      document.getElementById('readerEventReviewBtn').style.display = 'none';
+      document.getElementById('readerNextChapter').style.display = 'block';
+      document.getElementById('nextChapterBtn').style.display = '';
+      if (!readerCompleted) {
+        document.getElementById('readerEventReviewBtn').style.display = 'none';
+      }
       document.getElementById('readerContent').scrollTop = 0;
-      document.getElementById('scrollHint').classList.remove('hidden');
-      readerHasScrolled = false;
     }
 
     function handleWriteReview() {

@@ -1018,25 +1018,6 @@ body.reader-open {
 }
 
 /* ── Reader Scroll Hint ── */
-.reader-scroll-hint {
-  text-align: center;
-  padding: 20px 0 10px;
-  font-size: 0.8rem;
-  color: #BCC8B9;
-  animation: hintBounce 2s ease infinite;
-}
-
-@keyframes hintBounce {
-  0%, 100% { transform: translateY(0); opacity: 0.6; }
-  50% { transform: translateY(4px); opacity: 1; }
-}
-
-.reader-scroll-hint.hidden {
-  opacity: 0;
-  animation: none;
-  transition: opacity 0.5s ease;
-}
-
 /* ── Reader Footer ── */
 .reader-footer {
   text-align: center;
