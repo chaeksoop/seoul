@@ -14,6 +14,8 @@
   <link rel="stylesheet" href="css/style.css">
   <meta name="description" content="책숲 — 책의 숲에서 잠시 멈춤. 서울국제도서전 책숲 부스에 오신 것을 환영합니다.">
   <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -1097,9 +1099,18 @@
   }
 ];
 
-    const STORAGE_KEY = 'chaeksoop_reviews';
+    // ── Firebase ──
+    firebase.initializeApp({
+      apiKey: "AIzaSyBn6Thp7RK3Z-FtZ5GFcanEN_NtCxpcazA",
+      authDomain: "chaeksoop.firebaseapp.com",
+      projectId: "chaeksoop",
+      storageBucket: "chaeksoop.firebasestorage.app",
+      messagingSenderId: "389467273218",
+      appId: "1:389467273218:web:692866a85d5b05b4b8cf1b",
+      measurementId: "G-4EZFPN6M36"
+    });
+    const db = firebase.firestore();
 
-    // ── Ebook content ──
     // ── Ebook content (loaded lazily + encoded per book for security) ──
     let ebookContent = {};
 
@@ -1133,48 +1144,82 @@
     let readChapters = {}; // bookId -> Set of indices read this session
     let completionPopupShown = false;
 
-    // ── Reviews ──
-    function getReviews() {
+    // ── Reviews (Firestore) ──
+    let reviewsCache = [];
+
+    async function loadReviews() {
       try {
-        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+        const legacy = JSON.parse(localStorage.getItem('chaeksoop_reviews'));
+        if (legacy && legacy.length > 0) {
+          const batch = db.batch();
+          legacy.forEach(r => {
+            const ref = db.collection('reviews').doc();
+            batch.set(ref, r);
+          });
+          await batch.commit();
+          localStorage.removeItem('chaeksoop_reviews');
+        }
+      } catch {}
+      try {
+        const snapshot = await db.collection('reviews').orderBy('id', 'desc').get();
+        reviewsCache = snapshot.docs.map(d => ({ ...d.data(), _firebaseId: d.id }));
       } catch {
-        return [];
+        reviewsCache = [];
       }
     }
 
-    function saveReview(review) {
-      const reviews = getReviews();
-      reviews.unshift(review);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(reviews));
+    function getReviews() {
+      return reviewsCache;
     }
 
-    function deleteReview(id) {
-      let reviews = getReviews();
-      reviews = reviews.filter(r => r.id !== id);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(reviews));
+    async function saveReview(review) {
+      try {
+        const docRef = await db.collection('reviews').add(review);
+        reviewsCache.unshift({ ...review, _firebaseId: docRef.id });
+      } catch {
+        reviewsCache.unshift(review);
+      }
     }
 
-    // ── Messages (localStorage) ──
-    const MSG_STORAGE_KEY = 'chaeksoop_messages';
+    async function deleteReview(id) {
+      try {
+        const snapshot = await db.collection('reviews').where('id', '==', id).get();
+        snapshot.forEach(d => d.ref.delete());
+      } catch {}
+      reviewsCache = reviewsCache.filter(r => r.id !== id);
+    }
+
+    // ── Messages (Firestore) ──
+    let messagesCache = [];
+
+    async function loadMessages() {
+      try {
+        const snapshot = await db.collection('messages').orderBy('createdAt', 'desc').get();
+        messagesCache = snapshot.docs.map(d => ({ ...d.data(), _firebaseId: d.id }));
+      } catch {
+        messagesCache = [];
+      }
+    }
 
     function getMessages() {
+      return messagesCache;
+    }
+
+    async function saveMessage(msg) {
       try {
-        return JSON.parse(localStorage.getItem(MSG_STORAGE_KEY)) || [];
+        const docRef = await db.collection('messages').add(msg);
+        messagesCache.unshift({ ...msg, _firebaseId: docRef.id });
       } catch {
-        return [];
+        messagesCache.unshift(msg);
       }
     }
 
-    function saveMessage(msg) {
-      const messages = getMessages();
-      messages.unshift(msg);
-      localStorage.setItem(MSG_STORAGE_KEY, JSON.stringify(messages));
-    }
-
-    function deleteMessage(id) {
-      let messages = getMessages();
-      messages = messages.filter(m => m.id !== id);
-      localStorage.setItem(MSG_STORAGE_KEY, JSON.stringify(messages));
+    async function deleteMessage(id) {
+      try {
+        const snapshot = await db.collection('messages').where('id', '==', id).get();
+        snapshot.forEach(d => d.ref.delete());
+      } catch {}
+      messagesCache = messagesCache.filter(m => m.id !== id);
     }
 
     function getInitials(title) {
@@ -1486,7 +1531,7 @@
     function attachReviewSubmit() {
       const form = document.querySelector('.review-form');
       if (!form) return;
-      form.addEventListener('submit', function(e) {
+      form.addEventListener('submit', async function(e) {
         e.preventDefault();
         const nameInput = this.querySelector('.review-input');
         const emailInput = this.querySelector('input[type="email"]');
@@ -1495,7 +1540,7 @@
         const email = emailInput ? emailInput.value.trim() : '';
         const text = textarea.value.trim();
         if (!name || !text) return;
-        saveReview({
+        await saveReview({
           id: Date.now(),
           bookId: parseInt(this.dataset.bookId),
           bookTitle: this.dataset.bookTitle,
@@ -1666,7 +1711,7 @@
     }
 
     // ── Event Handlers ──
-    function handleReviewSubmit(e) {
+    async function handleReviewSubmit(e) {
       e.preventDefault();
       const form = e.target;
       const bookId = form.dataset.bookId;
@@ -1687,7 +1732,7 @@
         createdAt: new Date().toLocaleString('ko-KR')
       };
 
-      saveReview(review);
+      await saveReview(review);
 
       const isEvent = form.dataset.event === 'true';
       const successSub = isEvent
@@ -1906,9 +1951,9 @@
           const pw = prompt('관리자 암호를 입력하세요');
           if (pw === 'spn3261182') {
             if (tab === 'reviews') {
-              deleteReview(parseInt(this.dataset.reviewId));
+              await deleteReview(parseInt(this.dataset.reviewId));
             } else {
-              deleteMessage(parseInt(this.dataset.msgId));
+              await deleteMessage(parseInt(this.dataset.msgId));
             }
             openAdmin(tab);
           } else if (pw !== null) {
@@ -1947,9 +1992,9 @@
         batchBtn.disabled = true;
         batchBtn.textContent = '삭제 중...';
         if (tab === 'reviews') {
-          for (const c of checked) deleteReview(parseInt(c.dataset.reviewId));
+          for (const c of checked) await deleteReview(parseInt(c.dataset.reviewId));
         } else {
-          for (const c of checked) deleteMessage(parseInt(c.dataset.msgId));
+          for (const c of checked) await deleteMessage(parseInt(c.dataset.msgId));
         }
         openAdmin(tab);
       };
@@ -2010,7 +2055,7 @@
       document.getElementById('msgCount').textContent = this.value.length;
     });
 
-    document.getElementById('msgForm').addEventListener('submit', function(e) {
+    document.getElementById('msgForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       const text = document.getElementById('msgText').value.trim();
       if (!text) return;
@@ -2018,7 +2063,7 @@
       submitBtn.disabled = true;
       submitBtn.textContent = '전송 중...';
       try {
-        saveMessage({
+        await saveMessage({
           id: Date.now(),
           name: document.getElementById('msgName').value.trim() || '익명',
           text,
@@ -2123,8 +2168,13 @@
     document.getElementById('floatingDownloadBtn').addEventListener('click', exportBookList);
 
     // ── Init ──
-    buildCarousel();
-    renderBooks();
+    async function initData() {
+      await loadReviews();
+      await loadMessages();
+      buildCarousel();
+      renderBooks();
+    }
+    initData();
   </script>
 
 </body>
