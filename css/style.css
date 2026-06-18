@@ -1559,48 +1559,18 @@ body.reader-open {
 
 /* ── Brand Bar ── */
 .brand-bar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  padding: 24px 0 20px;
+  text-align: center;
+  padding: 20px 0 18px;
   position: relative;
   z-index: 1;
 }
 
-.brand-logo {
+.brand-publishers {
+  display: block;
   font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
   color: #7A8D7A;
-  padding: 6px 14px;
-  background: linear-gradient(135deg, #E8EDE6, #E2E9DF);
-  border-radius: 16px;
-  border: 1px solid rgba(168, 201, 165, 0.25);
-  box-shadow: 0 1px 3px rgba(168, 201, 165, 0.08);
-  white-space: nowrap;
-}
-
-.brand-logo-left::before {
-  content: '';
-  display: inline-block;
-  width: 18px;
-  height: 18px;
-  margin-right: 6px;
-  background: rgba(168, 201, 165, 0.3);
-  border-radius: 4px;
-  vertical-align: middle;
-}
-
-.brand-logo-right::after {
-  content: '';
-  display: inline-block;
-  width: 18px;
-  height: 18px;
-  margin-left: 6px;
-  background: rgba(168, 201, 165, 0.3);
-  border-radius: 4px;
-  vertical-align: middle;
+  margin-top: 4px;
+  letter-spacing: 0.3em;
 }
 
 .booth-info {
