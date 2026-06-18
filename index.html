@@ -39,7 +39,7 @@
 
         <button class="filter-trigger" id="filterTrigger">
       <span class="filter-trigger-icon">🔍</span>
-      <span class="filter-trigger-text" id="filterTriggerText">키워드를 선택하면 해당 도서가 아래 나타나요</span>
+      <span class="filter-trigger-text" id="filterTriggerText">키워드로 검색하기</span>
       <span class="filter-trigger-count" id="filterTriggerCount"></span>
     </button>
 
@@ -49,7 +49,7 @@
         <span class="event-label">EVENT</span>
       </div>
       <div class="event-notice-bottom">
-        해당 도서를 읽고 기대평을 남기면 <strong>소정의 선물</strong>을 드려요! <span class="event-hint">클릭하면 해당 도서가 아래에 나타나요</span>
+        이벤트 도서를 읽고 기대평을 남기면 <strong>소정의 선물</strong>을 드려요! <span class="event-hint">클릭하면 해당 도서가 아래에 나타나요</span>
       </div>
     </div>
 
@@ -1838,7 +1838,7 @@
         count.textContent = activeTags.length > 0 ? activeTags.length : '';
         count.style.display = '';
       } else {
-        text.textContent = '키워드를 선택하면 해당 도서가 아래 나타나요';
+        text.textContent = '키워드로 검색하기';
         count.style.display = 'none';
       }
     }
