@@ -1800,34 +1800,19 @@
       const container = document.getElementById('eventBooks');
       if (isActive) {
         const eventBooks = books.filter(b => b.event).sort(() => Math.random() - 0.5);
-        container.innerHTML = `
-          <div class="event-books-grid">
-            ${eventBooks.map(b => `
-              <div class="event-book-card" data-book-id="${b.id}">
-                <img src="${b.image}" alt="${b.title}" loading="lazy">
-                <div class="event-book-card-title">${b.title}</div>
-              </div>
-            `).join('')}
-          </div>
-          <div class="event-book-detail" id="eventBookDetail"></div>
-        `;
-        container.querySelectorAll('.event-book-card').forEach(el => {
-          el.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const id = parseInt(el.dataset.bookId);
-            const book = books.find(b => b.id === id);
-            if (!book) return;
-            const detail = document.getElementById('eventBookDetail');
-            const prev = detail.querySelector('.book-card');
-            if (prev && prev.dataset.bookId == id) {
-              detail.innerHTML = '';
-              return;
+        container.innerHTML = '<div class="event-books-list" id="eventBooksList"></div>';
+        const list = document.getElementById('eventBooksList');
+        eventBooks.forEach(book => {
+          const card = createBookCard(book);
+          card.classList.add('expanded');
+          list.appendChild(card);
+          requestAnimationFrame(() => {
+            const detail = card.querySelector('.book-detail');
+            if (detail) {
+              detail.style.height = 'auto';
+              detail.style.padding = '18px';
             }
-            const card = createBookCard(book);
-            card.classList.add('expanded');
-            card.querySelector('.book-detail').style.height = 'auto';
-            detail.innerHTML = '';
-            detail.appendChild(card);
+            renderBookReviews(book.id);
           });
         });
       } else {
