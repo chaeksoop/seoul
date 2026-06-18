@@ -1569,11 +1569,23 @@ body.reader-open {
   flex-wrap: wrap;
 }
 
-.brand-logo-img {
+.brand-logo-left,
+.brand-logo-right {
   display: block;
+  width: 120px;
   height: 36px;
-  width: auto;
-  object-fit: contain;
+  background-image: url(images/logo.png);
+  background-repeat: no-repeat;
+  background-size: cover;
+  flex-shrink: 0;
+}
+
+.brand-logo-left {
+  background-position: 0 0;
+}
+
+.brand-logo-right {
+  background-position: 0 100%;
 }
 
 .booth-info {
