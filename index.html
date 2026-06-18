@@ -1886,6 +1886,9 @@
 
     document.getElementById('chipsModalOverlay').addEventListener('click', closeChipsModal);
     document.getElementById('chipsModalClose').addEventListener('click', closeChipsModal);
+    document.getElementById('chipsModal').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) closeChipsModal();
+    });
 
     // Reader back
     document.getElementById('readerBack').addEventListener('click', closeReader);
