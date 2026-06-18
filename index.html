@@ -1124,9 +1124,8 @@
         const encoded = await resp.text();
         ebookContent[bookId] = decodeBookData(encoded);
       } catch {}
-      ebookContent[bookId] = decodeBookData(encoded);
     }
-        let eventFilterActive = false;
+    let eventFilterActive = false;
     let activeTags = [];
     let currentReaderBookId = null;
     let readerTimerInterval = null;
@@ -1282,6 +1281,7 @@
         });
       }
 
+    }
     function createReviewFormHTML(bookId, bookTitle, isEvent, timeStr) {
       const btnText = isEvent ? '기대평 남기고 굿즈 받기' : '기대평 남기기';
       const checkboxText = isEvent
