@@ -1795,7 +1795,8 @@
     renderChips();
     const eventFilter = document.getElementById('eventFilter');
 
-    eventFilter.addEventListener('click', () => {
+    eventFilter.addEventListener('click', (e) => {
+      if (e.target.closest('.event-books')) return;
       const isActive = eventFilter.classList.toggle('active');
       const container = document.getElementById('eventBooks');
       if (isActive) {
