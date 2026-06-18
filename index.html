@@ -1604,7 +1604,7 @@
 
         document.querySelectorAll('.book-card.expanded').forEach(c => {
           const d = c.querySelector('.book-detail');
-          if (d) d.style.height = '0';
+          if (d) { d.style.height = '0'; d.style.padding = ''; }
           c.classList.remove('expanded');
         });
 
@@ -1811,7 +1811,6 @@
             const detail = card.querySelector('.book-detail');
             if (detail) {
               detail.style.height = 'auto';
-              detail.style.padding = '18px';
             }
             renderBookReviews(book.id);
           });
