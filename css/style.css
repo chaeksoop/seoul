@@ -605,6 +605,44 @@ body.reader-open {
   margin-bottom: 18px;
 }
 
+.book-reviews {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(168, 201, 165, 0.25);
+}
+
+.book-reviews-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #A8BDA5;
+  letter-spacing: 0.04em;
+  margin-bottom: 10px;
+}
+
+.book-review-item {
+  padding: 10px 14px;
+  background: #F5F8F4;
+  border-radius: 10px;
+  margin-bottom: 8px;
+}
+
+.book-review-item:last-child {
+  margin-bottom: 0;
+}
+
+.book-review-text {
+  font-size: 0.88rem;
+  color: #4A5D4A;
+  line-height: 1.6;
+  font-style: italic;
+}
+
+.book-review-author {
+  font-size: 0.78rem;
+  color: #A8BDA5;
+  margin-top: 4px;
+}
+
 /* ── 3분 읽기 Button ── */
 .read-btn {
   display: flex;

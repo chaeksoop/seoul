@@ -1599,6 +1599,7 @@
           ${excerptHTML}
           <p class="publisher">${book.publisher}</p>
           ${readBtnHTML}
+          <div class="book-reviews" data-book-id="${book.id}"></div>
         </div>
       `;
 
@@ -1614,6 +1615,7 @@
 
         if (!wasExpanded) {
           card.classList.add('expanded');
+          renderBookReviews(book.id);
           requestAnimationFrame(() => {
             const detail = card.querySelector('.book-detail');
             detail.style.height = 'auto';
@@ -1671,6 +1673,24 @@
       }
 
       return card;
+    }
+
+    function renderBookReviews(bookId) {
+      const container = document.querySelector(`.book-reviews[data-book-id="${bookId}"]`);
+      if (!container) return;
+      const allReviews = getReviews().filter(r => r.bookId === bookId);
+      if (allReviews.length === 0) { container.innerHTML = ''; return; }
+      const shuffled = [...allReviews].sort(() => Math.random() - 0.5);
+      const selected = shuffled.slice(0, 3);
+      container.innerHTML = `
+        <div class="book-reviews-title">📖 독자 기대평</div>
+        ${selected.map(r => `
+          <div class="book-review-item">
+            <div class="book-review-text">"${r.text}"</div>
+            <div class="book-review-author">— ${r.name}</div>
+          </div>
+        `).join('')}
+      `;
     }
 
     // ── Render ──
