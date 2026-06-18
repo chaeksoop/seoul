@@ -2147,56 +2147,66 @@
     });
 
     // ── Cover Carousel ──
-    let carouselDrag = { isDown: false, startX: 0, scrollLeft: 0 };
+    let carouselState = { isDown: false, startX: 0, startPos: 0, autoResume: null };
+
+    function getCurrentX(el) {
+      const m = window.getComputedStyle(el).transform.match(/matrix.*\((.+)\)/);
+      if (!m) return 0;
+      const v = m[1].split(', ').map(Number);
+      return v.length === 16 ? v[12] : v[4];
+    }
 
     function initCarouselDrag() {
       const track = document.getElementById('coverCarouselTrack');
       if (!track) return;
 
-      function pauseAnim() { track.style.animationPlayState = 'paused'; }
-      function resumeAnim() { if (!carouselDrag.isDown) track.style.animationPlayState = ''; }
+      function pause() { track.style.animationPlayState = 'paused'; }
+      function resume() { track.style.animationPlayState = ''; }
+
+      function scheduleResume() {
+        clearTimeout(carouselState.autoResume);
+        carouselState.autoResume = setTimeout(() => {
+          if (!carouselState.isDown) resume();
+        }, 4000);
+      }
 
       track.addEventListener('mousedown', (e) => {
-        carouselDrag.isDown = true;
-        carouselDrag.startX = e.pageX - track.offsetLeft;
-        carouselDrag.scrollLeft = 0;
-        pauseAnim();
+        carouselState.isDown = true;
+        carouselState.startX = e.pageX - track.offsetLeft;
+        carouselState.startPos = getCurrentX(track);
+        pause();
+        clearTimeout(carouselState.autoResume);
         track.style.cursor = 'grabbing';
       });
-      track.addEventListener('mouseleave', () => {
-        if (!carouselDrag.isDown) return;
-        carouselDrag.isDown = false;
-        track.style.cursor = '';
-        resumeAnim();
-      });
-      track.addEventListener('mouseup', () => {
-        carouselDrag.isDown = false;
-        track.style.cursor = '';
-        resumeAnim();
-      });
-      track.addEventListener('mousemove', (e) => {
-        if (!carouselDrag.isDown) return;
-        e.preventDefault();
+      document.addEventListener('mousemove', (e) => {
+        if (!carouselState.isDown) return;
         const x = e.pageX - track.offsetLeft;
-        const walk = (x - carouselDrag.startX) * 1.5;
-        track.style.transform = `translateX(${carouselDrag.scrollLeft + walk}px)`;
+        const dx = (x - carouselState.startX) * 1.5;
+        track.style.transform = `translateX(${carouselState.startPos + dx}px)`;
+      });
+      document.addEventListener('mouseup', () => {
+        if (!carouselState.isDown) return;
+        carouselState.isDown = false;
+        track.style.cursor = '';
+        scheduleResume();
       });
 
       track.addEventListener('touchstart', (e) => {
-        carouselDrag.isDown = true;
-        carouselDrag.startX = e.touches[0].pageX - track.offsetLeft;
-        carouselDrag.scrollLeft = track.style.transform ? parseFloat(track.style.transform.replace(/[^\d-]/g, '')) : 0;
-        pauseAnim();
-      }, { passive: true });
-      track.addEventListener('touchend', () => {
-        carouselDrag.isDown = false;
-        resumeAnim();
+        carouselState.isDown = true;
+        carouselState.startX = e.touches[0].pageX - track.offsetLeft;
+        carouselState.startPos = getCurrentX(track);
+        pause();
+        clearTimeout(carouselState.autoResume);
       }, { passive: true });
       track.addEventListener('touchmove', (e) => {
-        if (!carouselDrag.isDown) return;
+        if (!carouselState.isDown) return;
         const x = e.touches[0].pageX - track.offsetLeft;
-        const walk = (x - carouselDrag.startX) * 1.5;
-        track.style.transform = `translateX(${carouselDrag.scrollLeft + walk}px)`;
+        const dx = (x - carouselState.startX) * 1.5;
+        track.style.transform = `translateX(${carouselState.startPos + dx}px)`;
+      }, { passive: true });
+      track.addEventListener('touchend', () => {
+        carouselState.isDown = false;
+        scheduleResume();
       }, { passive: true });
     }
 
