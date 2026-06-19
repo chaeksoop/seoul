@@ -30,7 +30,8 @@
       </div>
     </header>
 
-    <div class="cover-carousel" id="coverCarousel">
+    <main>
+      <div class="cover-carousel" id="coverCarousel">
       <div class="cover-carousel-track" id="coverCarouselTrack"></div>
     </div>
 
@@ -53,6 +54,8 @@
     </div>
 
     <div class="book-list" id="bookList"></div>
+
+    </main>
 
     <footer class="footer">
       <div class="footer-actions">
@@ -1840,8 +1843,7 @@
     renderChips();
     const eventFilter = document.getElementById('eventFilter');
 
-    eventFilter.addEventListener('click', (e) => {
-      if (e.target.closest('.event-books')) return;
+    function toggleEventFilter() {
       const isActive = eventFilter.classList.toggle('active');
       document.querySelector('.event-hint').textContent = isActive ? '클릭해서 접기' : '클릭해서 펼치기';
       const container = document.getElementById('eventBooks');
@@ -1861,6 +1863,17 @@
       updateFilterTrigger();
       renderBooks();
       buildCarousel();
+    }
+
+    eventFilter.addEventListener('click', (e) => {
+      if (e.target.closest('.event-books')) return;
+      toggleEventFilter();
+    });
+    eventFilter.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleEventFilter();
+      }
     });
 
     document.getElementById('chips').addEventListener('click', (e) => {
@@ -1971,6 +1984,17 @@
       }
     });
 
+    async function checkAdminPassword(pw) {
+      try {
+        const hash = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pw))))
+          .map(b => b.toString(16).padStart(2, '0')).join('');
+        return hash === 'd1eda9ab91b0fae01d8004b2b6504738ca9ca43fa2cfb612d6c53634eef2b90f';
+      } catch {
+        alert('보안 컨텍스트(HTTPS/localhost)에서만 관리자 인증이 가능합니다.');
+        return false;
+      }
+    }
+
     function openAdmin(tab) {
       const panel = document.getElementById('adminPanel');
       const list = document.getElementById('adminList');
@@ -2037,7 +2061,7 @@
       document.querySelectorAll('.admin-delete-btn').forEach(btn => {
         btn.addEventListener('click', async function() {
           const pw = prompt('관리자 암호를 입력하세요');
-          if (pw === 'spn3261182') {
+          if (await checkAdminPassword(pw)) {
             if (tab === 'reviews') {
               await deleteReview(parseInt(this.dataset.reviewId));
             } else {
@@ -2073,7 +2097,7 @@
         const checked = [...document.querySelectorAll('.admin-item-check:checked')];
         if (checked.length === 0) return;
         const pw = prompt(`관리자 암호를 입력하세요 (${checked.length}개 삭제)`);
-        if (pw !== 'spn3261182') {
+        if (!await checkAdminPassword(pw)) {
           if (pw !== null) alert('암호가 틀렸습니다.');
           return;
         }

@@ -11,8 +11,8 @@
   - `v1.2-final` — 최종 작업 완료 시점 (2026-06-18)
 
 ## 현재 상태
-- 브랜치: `main` (clean, up-to-date with origin/main)
-- 최종 커밋: `71faef9` (event-box transition 제거, chips-modal 배경 클릭)
+- 브랜치: `main` (clean)
+- 최종 커밋: (`대기 중 — 커밋 예정`)
 - 구조: 단일 HTML + CSS, 외부 의존성 최소
 - 데이터: `data/books/{id}.json` (XOR 암호화), 47권 메타데이터는 HTML 내 인라인
 - 기대평/메시지: localStorage + Firebase Firestore 동기화
@@ -59,13 +59,11 @@ python3 -m http.server 8000
 
 ## 보안
 - 책 본문: XOR(`chaeksoop2024`) + Base64 암호화
-- 관리자 암호: `spn3261182` (하드코딩)
+- 관리자 암호: SHA-256 해시 비교 (crypto.subtle, HTTPS 필요)
 - 엑셀 암호: 사용자 입력
 
 ## 알려진 이슈 / TODO
 - data/books/에 47권 중 7권만 존재 (1,2,3,38,42,46,47)
-- 관리자 암호 하드코딩 → 환경변수/설정 파일로 분리 필요
-- 실제 배포 전 모바일/웹 크로스 브라우징 테스트
 
 ## 개발 계속하는 방법
 ```bash
