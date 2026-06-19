@@ -58,7 +58,7 @@ body.reader-open {
   z-index: 1;
   background: linear-gradient(180deg, rgba(74, 108, 68, 0.04) 0%, transparent 80px);
   margin: -4px -16px 0;
-  padding: 60px 16px 20px;
+  padding: 44px 16px 14px;
 }
 
 .header::before {
@@ -76,15 +76,15 @@ body.reader-open {
 .header::after {
   content: '';
   display: block;
-  width: 80px;
-  height: 3px;
-  margin: 18px auto 0;
+  width: 60px;
+  height: 2px;
+  margin: 12px auto 0;
   background: linear-gradient(90deg, transparent, #8BAA8A, transparent);
   border-radius: 2px;
 }
 
 .header h1 {
-  font-size: 2.2rem;
+  font-size: 2rem;
   font-weight: 700;
   letter-spacing: -0.02em;
   color: #2C3E2D;
@@ -116,9 +116,9 @@ body.reader-open {
 }
 
 .header .tagline {
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   color: #6B8A6B;
-  margin-top: 10px;
+  margin-top: 6px;
   font-weight: 400;
   letter-spacing: -0.01em;
 }
@@ -177,8 +177,8 @@ body.reader-open {
   align-items: center;
   gap: 6px;
   width: 100%;
-  padding: 12px 16px;
-  margin-bottom: 16px;
+  padding: 10px 14px;
+  margin-bottom: 10px;
   background: rgba(168, 201, 165, 0.1);
   border: 1.5px solid #D5DDD2;
   border-radius: 12px;
@@ -332,9 +332,9 @@ body.reader-open {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  padding: 14px 14px;
-  margin-bottom: 12px;
+  gap: 4px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
   background: linear-gradient(135deg, #DCE8D8 0%, #E2EDDE 100%);
   border-radius: 14px;
   position: relative;
@@ -1552,7 +1552,7 @@ body.reader-open {
 /* ── Brand Bar ── */
 .brand-bar {
   text-align: center;
-  padding: 20px 0 18px;
+  padding: 14px 0 10px;
   position: relative;
   z-index: 1;
 }
@@ -1581,7 +1581,7 @@ body.reader-open {
 /* ── Footer ── */
 .footer {
   text-align: center;
-  padding: 20px 0 40px;
+  padding: 16px 0 32px;
   border-top: 1px solid #DAE5D7;
   margin-top: 0;
   position: relative;
@@ -1614,10 +1614,10 @@ body.reader-open {
 }
 
 .footer p {
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   color: #A8BDA5;
-  line-height: 1.8;
-  margin-top: 1.4rem;
+  line-height: 1.6;
+  margin-top: 1rem;
   position: relative;
   z-index: 1;
 }
@@ -1630,9 +1630,9 @@ body.reader-open {
 .footer-actions {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   align-items: center;
-  margin-top: 16px;
+  margin-top: 12px;
   position: relative;
   z-index: 1;
 }
@@ -1671,7 +1671,7 @@ body.reader-open {
   }
 
   .header {
-    padding: 56px 0 36px;
+    padding: 48px 0 28px;
   }
 
   .header h1 {
@@ -1967,8 +1967,8 @@ body.reader-open {
 /* ── Cover Carousel ── */
 .cover-carousel {
   overflow: hidden;
-  margin: 0 -16px 12px;
-  padding: 2px 0;
+  margin: 0 -16px 6px;
+  padding: 0;
   position: relative;
 }
 
@@ -2200,6 +2200,106 @@ body.reader-open {
 
 .popup-read-btn {
   margin-top: 16px;
+}
+
+/* ── Review Carousel ── */
+.review-carousel {
+  overflow: hidden;
+  position: relative;
+  height: 0;
+  transition: height 0.4s ease, opacity 0.4s ease;
+  opacity: 0;
+  margin: 0 -16px;
+}
+
+.review-carousel.has-reviews {
+  height: 48px;
+  opacity: 1;
+}
+
+.review-carousel-inner {
+  position: relative;
+  height: 100%;
+}
+
+.review-slide {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 24px;
+  font-size: 0.82rem;
+  color: #3D6E3D;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  pointer-events: none;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.review-slide.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.review-slide-icon {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  opacity: 0.6;
+}
+
+.review-slide-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+  font-style: italic;
+}
+
+.review-slide-author {
+  flex-shrink: 0;
+  color: #7A8D7A;
+  font-weight: 400;
+}
+
+.review-slide-book {
+  flex-shrink: 0;
+  color: #9AAD9A;
+  font-weight: 400;
+  font-size: 0.75rem;
+}
+
+@media (max-width: 480px) {
+  .review-slide {
+    flex-wrap: wrap;
+    justify-content: center;
+    align-content: center;
+    gap: 0 4px;
+    padding: 4px 12px;
+    font-size: 0.72rem;
+    white-space: normal;
+    line-height: 1.4;
+  }
+  .review-slide-icon {
+    font-size: 0.65rem;
+  }
+  .review-slide-text {
+    max-width: 88%;
+    text-align: center;
+  }
+  .review-slide-author {
+    font-size: 0.65rem;
+    color: #8A9D8A;
+  }
+  .review-slide-book {
+    display: inline;
+    font-size: 0.62rem;
+    color: #A8BDA5;
+  }
+  .review-carousel.has-reviews {
+    height: 44px;
+  }
 }
 
 @keyframes carouselScroll {

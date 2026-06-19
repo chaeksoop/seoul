@@ -31,6 +31,9 @@
     </header>
 
     <main>
+      <div class="review-carousel" id="reviewCarousel" aria-label="독자 기대평">
+        <div class="review-carousel-inner" id="reviewCarouselInner"></div>
+      </div>
       <div class="cover-carousel" id="coverCarousel">
       <div class="cover-carousel-track" id="coverCarouselTrack"></div>
     </div>
@@ -1226,6 +1229,72 @@
       reviewsCache = reviewsCache.filter(r => r.id !== id);
     }
 
+    // ── Review Carousel ──
+    let reviewCarouselTimer = null;
+
+    function buildReviewSlides(reviews) {
+      const inner = document.getElementById('reviewCarouselInner');
+      const carousel = document.getElementById('reviewCarousel');
+      if (!inner) return;
+      if (!reviews || reviews.length === 0) {
+        carousel.classList.remove('has-reviews');
+        inner.innerHTML = '';
+        return;
+      }
+      carousel.classList.add('has-reviews');
+      inner.innerHTML = reviews.map((r, i) =>
+        `<div class="review-slide${i === 0 ? ' active' : ''}">` +
+          `<span class="review-slide-icon">💬</span>` +
+          `<span class="review-slide-text">"${escapeHtml(r.text)}"</span>` +
+          `<span class="review-slide-author">— ${escapeHtml(r.name)}</span>` +
+          `<span class="review-slide-book">· 《${escapeHtml(r.bookTitle || '')}》</span>` +
+        `</div>`
+      ).join('');
+      startReviewRotation(reviews.length);
+    }
+
+    function startReviewRotation(count) {
+      if (reviewCarouselTimer) clearInterval(reviewCarouselTimer);
+      if (count < 2) return;
+      reviewCarouselTimer = setInterval(() => {
+        const slides = document.querySelectorAll('#reviewCarouselInner .review-slide');
+        const current = document.querySelector('#reviewCarouselInner .review-slide.active');
+        let nextIdx = 0;
+        if (current) {
+          current.classList.remove('active');
+          const idx = Array.from(slides).indexOf(current);
+          nextIdx = (idx + 1) % slides.length;
+        }
+        if (slides[nextIdx]) slides[nextIdx].classList.add('active');
+      }, 5000);
+    }
+
+    function addReviewToCarousel(review) {
+      const inner = document.getElementById('reviewCarouselInner');
+      const carousel = document.getElementById('reviewCarousel');
+      if (!inner) return;
+      carousel.classList.add('has-reviews');
+      const slide = document.createElement('div');
+      slide.className = 'review-slide';
+      slide.innerHTML =
+        `<span class="review-slide-icon">💬</span>` +
+        `<span class="review-slide-text">"${escapeHtml(review.text)}"</span>` +
+        `<span class="review-slide-author">— ${escapeHtml(review.name)}</span>` +
+        `<span class="review-slide-book">· 《${escapeHtml(review.bookTitle || '')}》</span>`;
+      inner.prepend(slide);
+      const allSlides = inner.querySelectorAll('.review-slide');
+      allSlides.forEach(s => s.classList.remove('active'));
+      slide.classList.add('active');
+      startReviewRotation(allSlides.length);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
     // ── Messages (Firestore) ──
     let messagesCache = [];
 
@@ -1794,6 +1863,7 @@
       };
 
       await saveReview(review);
+      addReviewToCarousel(review);
 
       const isEvent = form.dataset.event === 'true';
       const successSub = isEvent
@@ -2387,6 +2457,7 @@
     // ── Init ──
     async function initData() {
       await loadReviews();
+      buildReviewSlides(getReviews());
       await loadMessages();
       buildCarousel();
       initCarouselDrag();

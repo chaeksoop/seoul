@@ -10,27 +10,22 @@
   - `v1.0-current` — 최초 분석 완료 시점
   - `v1.2-final` — UI/기능 마무리 (2026-06-18)
   - `v1.3-cross-browser` — 크로스 브라우징 및 보안 개선 (2026-06-19)
+  - `v1.4-supplement` — ISBN 부가기호 5자리 적용 (2026-06-19)
 
 ## 현재 상태
-- 브랜치: `main` (clean)
-- 최종 커밋: `50e4df6` (AGENTS.md: v1.3-cross-browser 태그 추가)
+- 브랜치: `main` (clean, working tree)
+- 최종 커밋: `2d76e95` (ISBN 부가기호 5자리로 교체)
 - 구조: 단일 HTML + CSS, 외부 의존성 최소
 - 데이터: `data/books/{id}.json` (XOR 암호화), 47권 메타데이터는 HTML 내 인라인
 - 기대평/메시지: localStorage + Firebase Firestore 동기화
 - 외부 의존성: Pretendard 폰트, SheetJS (xlsx)
+- 리뷰 캐러셀: Firestore 리뷰를 홈 상단에 5초 간격 회전 (커버 캐러셀 위)
+- 모바일 간격 조정: header, brand-bar, carousel, filter, event-notice, footer 간격 압축 완료
 
 ## 복원 방법
 ```bash
-# 1. 클론 또는 기존 저장소로 이동
 cd /Users/dde/Documents/Codex/codex/bookfair
-
-# 2. 최신 상태로 복원
 git checkout main && git pull origin main
-
-# 3. 특정 백업 지점으로 복원
-git checkout v1.2-final
-
-# 4. 로컬 서버 실행
 python3 -m http.server 8000
 # 브라우저: http://localhost:8000
 ```
@@ -42,45 +37,7 @@ python3 -m http.server 8000
 | `css/style.css` | 모든 스타일 |
 | `data/books/1..47.json` | 암호화된 책 본문 (7개만 존재) |
 | `images/` | 책 표지, 로고 이미지 |
-| `AGENTS.md` | 프로젝트 컨텍스트 문서 |
 | `scrape_culturlook.py` | 알라딘 크롤러 |
-| `book-forest/` | v4 (Firebase, 레거시) |
-| `book-forest-v5/` | v5 (레거시, 루트로 교체됨) |
-
-## 주요 기능
-1. 책 목록 카드 (확장/축소, 키워드 필터, EVENT 필터)
-2. 상단 표지 캐러셀 (JS 자동 스크롤 + 드래그, 무한 래핑)
-3. 책 상세 팝업
-4. E-Reader (랜덤 챕터, 30초 타이머, 다음 읽기)
-5. 기대평/메시지 (Firestore 동기화)
-6. 관리자 패널 (로고 5연타 → 조회/삭제/엑셀 내보내기)
-7. 복사 방지
-8. 도서 목록 엑셀 다운로드
-9. 부스 메시지 보내기
-
-## 보안
-- 책 본문: XOR(`chaeksoop2024`) + Base64 암호화
-- 관리자 암호: SHA-256 해시 비교 (crypto.subtle, HTTPS 필요)
-- 엑셀 암호: 사용자 입력
 
 ## 알려진 이슈 / TODO
 - data/books/에 47권 중 7권만 존재 (1,2,3,38,42,46,47)
-
-## ISBN 부가기호 (supplement codes)
-- `kdc` 필드는 이제 5자리 ISBN 부가기호(supplement code)를 저장
-- 구조: [독자대상 1자리][발행형태 1자리][KDC 1-2자리][0]
-  - 독자대상: 0=교양(코쿤북스/일반), 9=전문·학술(컬처룩 학술서)
-  - 발행형태: 3=단행본, 4=시리즈(이한진 수학 시리즈)
-  - KDC: 십진분류법 첫 2자리 + trailing 0
-- `getKdcCategory()`가 supplement code에서 KDC 추출 (slice(2,4)+'0')
-- 확인된 예: 창조적 행위=03600, AI 미분=04410
-
-## 개발 계속하는 방법
-```bash
-cd /Users/dde/Documents/Codex/codex/bookfair
-python3 -m http.server 8000
-
-# 변경 후 커밋 & 푸시
-git add -A && git commit -m "설명"
-git push origin main
-```
