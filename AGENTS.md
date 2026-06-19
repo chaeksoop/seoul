@@ -8,11 +8,12 @@
 - 리모트: `git@github.com:dish1218/experiment.git` (main 브랜치)
 - 백업 태그:
   - `v1.0-current` — 최초 분석 완료 시점
-  - `v1.2-final` — 최종 작업 완료 시점 (2026-06-18)
+  - `v1.2-final` — UI/기능 마무리 (2026-06-18)
+  - `v1.3-cross-browser` — 크로스 브라우징 및 보안 개선 (2026-06-19)
 
 ## 현재 상태
 - 브랜치: `main` (clean)
-- 최종 커밋: `0e23529` (관리자 암호 SHA-256, 크로스 브라우징 패치, git remote SSH)
+- 최종 커밋: `4c9eef8` (AGENTS.md: update commit hash to 0e23529)
 - 구조: 단일 HTML + CSS, 외부 의존성 최소
 - 데이터: `data/books/{id}.json` (XOR 암호화), 47권 메타데이터는 HTML 내 인라인
 - 기대평/메시지: localStorage + Firebase Firestore 동기화
