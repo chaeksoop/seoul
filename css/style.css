@@ -341,7 +341,6 @@ body.reader-open {
   z-index: 1;
   border: 1px solid rgba(61, 110, 61, 0.2);
   box-shadow: 0 2px 8px rgba(61, 110, 61, 0.08);
-  transition: background 0.25s ease, border-color 0.25s ease;
 }
 
 @media (min-width: 480px) {
@@ -374,10 +373,6 @@ body.reader-open {
   cursor: pointer;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
-}
-
-#eventFilter:active {
-  transform: scale(0.98);
 }
 
 #eventFilter.active {
@@ -417,12 +412,6 @@ body.reader-open {
 #eventFilter.active .event-books {
   display: block;
   padding: 12px 0 4px;
-  animation: eventFadeIn 0.3s ease;
-}
-
-@keyframes eventFadeIn {
-  from { opacity: 0; transform: translateY(-8px); }
-  to { opacity: 1; transform: translateY(0); }
 }
 
 .event-books-list {
