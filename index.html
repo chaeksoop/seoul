@@ -55,15 +55,15 @@
     <div class="book-list" id="bookList"></div>
 
     <footer class="footer">
+      <div class="footer-actions">
+        <button class="footer-btn" id="floatingDownloadBtn">📋 전체 도서목록 다운로드</button>
+        <button class="footer-btn" id="floatingMsgBtn">💬 부스에 메시지 보내기</button>
+      </div>
       <p>
         <strong>책숲</strong> · 서울국제도서전 B109<br>
         QR 문의: 부스 스태프에게 말씀해주세요<br>
         &copy; 2026 컬처룩 · 코쿤북스
       </p>
-      <div class="footer-actions">
-        <button class="footer-btn" id="floatingDownloadBtn">📋 전체 도서목록 다운로드</button>
-        <button class="footer-btn" id="floatingMsgBtn">💬 부스에 메시지 보내기</button>
-      </div>
     </footer>
 
   </div>
@@ -1456,7 +1456,9 @@
         document.getElementById('readerEventReviewBtn').style.display = '';
         document.getElementById('readerNextChapter').style.display = 'block';
         requestAnimationFrame(() => {
-          document.getElementById('readerContent').scrollTop = 0;
+          requestAnimationFrame(() => {
+            document.getElementById('readerContent').scrollTop = 0;
+          });
         });
         return;
       }
@@ -1492,7 +1494,9 @@
         document.getElementById('readerEventReviewBtn').style.display = 'none';
       }
       requestAnimationFrame(() => {
-        document.getElementById('readerContent').scrollTop = 0;
+        requestAnimationFrame(() => {
+          document.getElementById('readerContent').scrollTop = 0;
+        });
       });
     }
 
