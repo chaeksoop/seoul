@@ -12,7 +12,7 @@
 
 ## 현재 상태
 - 브랜치: `main` (clean)
-- 최종 커밋: (`대기 중 — 커밋 예정`)
+- 최종 커밋: `0e23529` (관리자 암호 SHA-256, 크로스 브라우징 패치, git remote SSH)
 - 구조: 단일 HTML + CSS, 외부 의존성 최소
 - 데이터: `data/books/{id}.json` (XOR 암호화), 47권 메타데이터는 HTML 내 인라인
 - 기대평/메시지: localStorage + Firebase Firestore 동기화
