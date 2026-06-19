@@ -1613,6 +1613,7 @@ body.reader-open {
   font-size: 0.85rem;
   color: #A8BDA5;
   line-height: 1.8;
+  margin-top: 1.4rem;
   position: relative;
   z-index: 1;
 }
