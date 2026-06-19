@@ -1375,7 +1375,7 @@
       document.body.classList.add('reader-open');
 
       // Scroll to top
-      document.getElementById('readerContent').scrollTop = 0;
+      document.getElementById('readerOverlay').scrollTop = 0;
 
       // Start timer
       if (readerTimerInterval) clearInterval(readerTimerInterval);
@@ -1456,9 +1456,7 @@
         document.getElementById('readerEventReviewBtn').style.display = '';
         document.getElementById('readerNextChapter').style.display = 'block';
         requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            document.getElementById('readerContent').scrollTop = 0;
-          });
+          document.getElementById('readerOverlay').scrollTop = 0;
         });
         return;
       }
@@ -1494,9 +1492,7 @@
         document.getElementById('readerEventReviewBtn').style.display = 'none';
       }
       requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          document.getElementById('readerContent').scrollTop = 0;
-        });
+        document.getElementById('readerOverlay').scrollTop = 0;
       });
     }
 
@@ -1811,15 +1807,7 @@
         const list = document.getElementById('eventBooksList');
         eventBooks.forEach(book => {
           const card = createBookCard(book);
-          card.classList.add('expanded');
           list.appendChild(card);
-          requestAnimationFrame(() => {
-            const detail = card.querySelector('.book-detail');
-            if (detail) {
-              detail.style.height = 'auto';
-            }
-            renderBookReviews(book.id);
-          });
         });
       } else {
         container.innerHTML = '';
@@ -1898,7 +1886,7 @@
     document.getElementById('readerBack').addEventListener('click', closeReader);
 
     // Reader scroll
-    document.getElementById('readerContent').addEventListener('scroll', handleReaderScroll);
+    document.getElementById('readerOverlay').addEventListener('scroll', handleReaderScroll);
 
     // Next chapter button
     document.getElementById('nextChapterBtn').addEventListener('click', () => {

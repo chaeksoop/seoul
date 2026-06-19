@@ -129,7 +129,7 @@ body.reader-open {
   flex-wrap: wrap;
   gap: 10px;
   justify-content: center;
-  padding: 8px 0 24px;
+  padding: 8px 0 16px;
   position: relative;
   z-index: 1;
 }
@@ -425,7 +425,7 @@ body.reader-open {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding-bottom: 32px;
+  padding-bottom: 12px;
 }
 
 .book-card {
@@ -1577,9 +1577,9 @@ body.reader-open {
 /* ── Footer ── */
 .footer {
   text-align: center;
-  padding: 32px 0 56px;
+  padding: 20px 0 40px;
   border-top: 1px solid #DAE5D7;
-  margin-top: 4px;
+  margin-top: 0;
   position: relative;
 }
 
@@ -1627,7 +1627,7 @@ body.reader-open {
   flex-direction: column;
   gap: 10px;
   align-items: center;
-  margin-top: 20px;
+  margin-top: 16px;
   position: relative;
   z-index: 1;
 }
