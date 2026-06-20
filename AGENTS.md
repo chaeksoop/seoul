@@ -11,16 +11,19 @@
   - `v1.2-final` — UI/기능 마무리 (2026-06-18)
   - `v1.3-cross-browser` — 크로스 브라우징 및 보안 개선 (2026-06-19)
   - `v1.4-supplement` — ISBN 부가기호 5자리 적용 (2026-06-19)
+  - `v1.5-review-carousel` — 리뷰 캐러셀 + 모바일 간격 조정 (2026-06-19)
+  - `v1.6-reading-samples` — 3종 이벤트 도서 읽기 샘플 추가 (2026-06-20)
 
 ## 현재 상태
 - 브랜치: `main` (clean, working tree)
-- 최종 커밋: `2d76e95` (ISBN 부가기호 5자리로 교체)
+- 최종 커밋: `ce77f71` (읽기 샘플 추가)
 - 구조: 단일 HTML + CSS, 외부 의존성 최소
 - 데이터: `data/books/{id}.json` (XOR 암호화), 47권 메타데이터는 HTML 내 인라인
 - 기대평/메시지: localStorage + Firebase Firestore 동기화
 - 외부 의존성: Pretendard 폰트, SheetJS (xlsx)
 - 리뷰 캐러셀: Firestore 리뷰를 홈 상단에 5초 간격 회전 (커버 캐러셀 위)
 - 모바일 간격 조정: header, brand-bar, carousel, filter, event-notice, footer 간격 압축 완료
+- 읽기 샘플: 3종 이벤트 도서 (AI 미분 id:42, 책임지지 않는 권력 id:46, K팝 댄스 id:47) 챕터/문단 확장
 
 ## 복원 방법
 ```bash
