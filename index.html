@@ -1201,14 +1201,17 @@
         }
       } catch (e) { console.error('loadReviews batch failed:', e); }
       try {
-        const snapshot = await db.collection('reviews').orderBy('id', 'desc').get();
+        const snapshot = await db.collection('reviews').get();
         reviewsCache = snapshot.docs.map(d => {
           const raw = d.data();
           return { id: raw.id, bookId: raw.bookId, bookTitle: raw.bookTitle, name: raw.name, email: raw.email, text: raw.text, approved: raw.approved !== false, createdAt: raw.createdAt, _firebaseId: d.id };
-        });
+        }).sort((a, b) => (b.id || 0) - (a.id || 0));
       } catch (e) {
         console.error('loadReviews query failed:', e);
         reviewsCache = [];
+      }
+      if (reviewsCache.length === 0) {
+        console.warn('No reviews loaded from Firestore. Data may not exist yet.');
       }
     }
 
@@ -1248,14 +1251,14 @@
       const inner = document.getElementById('reviewCarouselInner');
       const carousel = document.getElementById('reviewCarousel');
       if (!inner) return;
-      const approved = (reviews || []).filter(r => r.approved);
-      if (approved.length === 0) {
+      const visible = (reviews || []).filter(r => r.approved);
+      if (visible.length === 0) {
         carousel.classList.remove('has-reviews');
         inner.innerHTML = '';
         return;
       }
       carousel.classList.add('has-reviews');
-      inner.innerHTML = approved.map((r, i) =>
+      inner.innerHTML = visible.map((r, i) =>
         `<div class="review-slide${i === 0 ? ' active' : ''}">` +
           `<span class="review-slide-icon">💬</span>` +
           `<span class="review-slide-text">"${escapeHtml(r.text)}"</span>` +
@@ -1263,7 +1266,7 @@
           `<span class="review-slide-book">· 《${escapeHtml(r.bookTitle || '')}》</span>` +
         `</div>`
       ).join('');
-      startReviewRotation(approved.length);
+      startReviewRotation(visible.length);
     }
 
     function startReviewRotation(count) {
@@ -1893,7 +1896,7 @@
       const isEvent = form.dataset.event === 'true';
       const successSub = isEvent
         ? '부스 스태프에게 굿즈를 받아가세요 :)'
-        : '관리자 승인 후 공개됩니다';
+        : '관리자가 확인 중입니다';
 
       form.innerHTML = `
         <div class="review-success">
