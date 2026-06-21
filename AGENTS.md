@@ -29,7 +29,7 @@
 ```bash
 cd /Users/dde/Documents/Codex/codex/bookfair
 git checkout main && git pull origin main
-python3 -m http.server 8000
+python3 server.py
 # 브라우저: http://localhost:8000
 ```
 
@@ -40,7 +40,9 @@ python3 -m http.server 8000
 | `css/style.css` | 모든 스타일 |
 | `data/books/1..47.json` | 암호화된 책 본문 (7개만 존재) |
 | `images/` | 책 표지, 로고 이미지 |
+| `server.py` | no-cache 헤더를 보내는 개발 서버 (python3) |
 | `scrape_culturlook.py` | 알라딘 크롤러 |
 
 ## 알려진 이슈 / TODO
 - data/books/에 47권 중 7권만 존재 (1,2,3,38,42,46,47)
+- 뒤로가기 새로고침: server.py의 Cache-Control 헤더 + JS performance/pageshow 이중 처리

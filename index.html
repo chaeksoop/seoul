@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>책숲</title>
   <meta property="og:title" content="책숲 - 책의 숲에서 잠시 멈춤">
   <meta property="og:description" content="서울국제도서전 B109 · 컬처룩 &amp; 코쿤북스">
@@ -1139,6 +1142,13 @@
     "event": true
   }
 ];
+
+    // ── 뒤로가기 시 새로고침 ──
+    try {
+      const nav = performance.getEntriesByType('navigation')[0];
+      if (nav && nav.type === 'back_forward') location.reload();
+    } catch {}
+    window.addEventListener('pageshow', (e) => { if (e.persisted) location.reload(); });
 
     // ── Firebase ──
     firebase.initializeApp({
