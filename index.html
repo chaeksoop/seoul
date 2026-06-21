@@ -7,7 +7,7 @@
   <meta property="og:title" content="책숲 - 책의 숲에서 잠시 멈춤">
   <meta property="og:description" content="서울국제도서전 B109 · 컬처룩 &amp; 코쿤북스">
   <meta property="og:type" content="website">
-  <meta property="og:image" content="images/og-image.jpg">
+  <!-- og:image omitted (file not available) -->
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet">
@@ -1799,8 +1799,8 @@
         <div class="book-reviews-title">📖 독자 기대평</div>
         ${selected.map(r => `
           <div class="book-review-item">
-            <div class="book-review-text">"${r.text}"</div>
-            <div class="book-review-author">— ${r.name}</div>
+            <div class="book-review-text">"${escapeHtml(r.text)}"</div>
+            <div class="book-review-author">— ${escapeHtml(r.name)}</div>
           </div>
         `).join('')}
       `;
@@ -2117,12 +2117,12 @@
               <input type="checkbox" class="admin-item-check" data-review-id="${r.id}">
               <div class="admin-item-body">
                 <div class="admin-item-header">
-                  <strong>${r.name}</strong>
-                  ${r.email ? `<span class="admin-item-email">${r.email}</span>` : ''}
-                  <span class="admin-item-book">${r.bookTitle}</span>
-                  <span class="admin-item-date">${r.createdAt}</span>
+                  <strong>${escapeHtml(r.name)}</strong>
+                  ${r.email ? `<span class="admin-item-email">${escapeHtml(r.email)}</span>` : ''}
+                  <span class="admin-item-book">${escapeHtml(r.bookTitle)}</span>
+                  <span class="admin-item-date">${escapeHtml(r.createdAt)}</span>
                 </div>
-                <p class="admin-item-text">${r.text}</p>
+                <p class="admin-item-text">${escapeHtml(r.text)}</p>
                 <button class="admin-delete-btn" data-review-id="${r.id}">삭제</button>
               </div>
             </div>
@@ -2135,19 +2135,21 @@
           list.innerHTML = '<p class="admin-empty">아직 메시지가 없습니다.</p>';
         } else {
           list.innerHTML = messages.map(m => {
+            const nameEsc = escapeHtml(m.name || '익명');
+            const contactEsc = escapeHtml(m.contact || '');
             const contactHtml = m.contact
-              ? `<a href="mailto:${m.contact}?subject=[책숲] 답변 드립니다" class="admin-msg-contact">📧 ${m.contact}</a>`
+              ? `<a href="mailto:${contactEsc}?subject=[책숲] 답변 드립니다" class="admin-msg-contact">📧 ${contactEsc}</a>`
               : `<span class="admin-msg-badge">연락처 없음</span>`;
             return `
             <div class="admin-item">
               <input type="checkbox" class="admin-item-check" data-msg-id="${m.id}">
               <div class="admin-item-body">
                 <div class="admin-item-header">
-                  <strong>${m.name || '익명'}</strong>
+                  <strong>${nameEsc}</strong>
                   ${contactHtml}
-                  <span class="admin-item-date">${m.createdAt}</span>
+                  <span class="admin-item-date">${escapeHtml(m.createdAt)}</span>
                 </div>
-                <p class="admin-item-text">${m.text}</p>
+                <p class="admin-item-text">${escapeHtml(m.text)}</p>
                 <button class="admin-delete-btn" data-msg-id="${m.id}">삭제</button>
               </div>
             </div>
