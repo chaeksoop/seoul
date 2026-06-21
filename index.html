@@ -1204,7 +1204,7 @@
         const snapshot = await db.collection('reviews').orderBy('id', 'desc').get();
         reviewsCache = snapshot.docs.map(d => {
           const raw = d.data();
-          return { id: raw.id, bookId: raw.bookId, bookTitle: raw.bookTitle, name: raw.name, email: raw.email, text: raw.text, createdAt: raw.createdAt, _firebaseId: d.id };
+          return { id: raw.id, bookId: raw.bookId, bookTitle: raw.bookTitle, name: raw.name, email: raw.email, text: raw.text, approved: raw.approved !== false, createdAt: raw.createdAt, _firebaseId: d.id };
         });
       } catch (e) {
         console.error('loadReviews query failed:', e);
@@ -1232,6 +1232,14 @@
       } catch (e) { console.error('deleteReview failed:', e); }
       reviewsCache = reviewsCache.filter(r => r.id !== id);
     }
+    async function approveReview(id) {
+      try {
+        const snapshot = await db.collection('reviews').where('id', '==', id).get();
+        snapshot.forEach(d => d.ref.update({ approved: true }));
+        const r = reviewsCache.find(r => r.id === id);
+        if (r) { r.approved = true; addReviewToCarousel(r); }
+      } catch (e) { console.error('approveReview failed:', e); }
+    }
 
     // ── Review Carousel ──
     let reviewCarouselTimer = null;
@@ -1240,13 +1248,14 @@
       const inner = document.getElementById('reviewCarouselInner');
       const carousel = document.getElementById('reviewCarousel');
       if (!inner) return;
-      if (!reviews || reviews.length === 0) {
+      const approved = (reviews || []).filter(r => r.approved);
+      if (approved.length === 0) {
         carousel.classList.remove('has-reviews');
         inner.innerHTML = '';
         return;
       }
       carousel.classList.add('has-reviews');
-      inner.innerHTML = reviews.map((r, i) =>
+      inner.innerHTML = approved.map((r, i) =>
         `<div class="review-slide${i === 0 ? ' active' : ''}">` +
           `<span class="review-slide-icon">💬</span>` +
           `<span class="review-slide-text">"${escapeHtml(r.text)}"</span>` +
@@ -1254,7 +1263,7 @@
           `<span class="review-slide-book">· 《${escapeHtml(r.bookTitle || '')}》</span>` +
         `</div>`
       ).join('');
-      startReviewRotation(reviews.length);
+      startReviewRotation(approved.length);
     }
 
     function startReviewRotation(count) {
@@ -1297,6 +1306,19 @@
       const div = document.createElement('div');
       div.textContent = str;
       return div.innerHTML;
+    }
+
+    // ── Profanity Filter ──
+    const BAD_WORDS = [
+      '시발', '씨발', '시팔', '씹', '존나', '좆', '병신', '새끼', '느금마',
+      '개새끼', '미친', '니미럴', '호로', '십새', '십팔', 'ㄱㅅㄲ', 'ㅅㅂ',
+      'fuck', 'shit', 'asshole', 'bitch', 'bastard', 'dick', 'porn', 'sex',
+      'free money', 'click here', 'buy now', 'subscribe', 'http://', 'https://'
+    ];
+
+    function hasProfanity(text) {
+      const lower = text.toLowerCase();
+      return BAD_WORDS.some(w => lower.includes(w.toLowerCase()));
     }
 
     // ── Messages (Firestore) ──
@@ -1781,7 +1803,7 @@
     function renderBookReviews(bookId) {
       const container = document.querySelector(`.book-reviews[data-book-id="${bookId}"]`);
       if (!container) return;
-      const allReviews = getReviews().filter(r => r.bookId === bookId);
+      const allReviews = getReviews().filter(r => r.bookId === bookId && r.approved);
       if (allReviews.length === 0) { container.innerHTML = ''; return; }
       const shuffled = [...allReviews].sort(() => Math.random() - 0.5);
       const selected = shuffled.slice(0, 3);
@@ -1842,6 +1864,11 @@
       const text = form.querySelector('.review-textarea').value.trim();
       if (!text || !name) return;
 
+      if (hasProfanity(text) || hasProfanity(name)) {
+        alert('부적절한 표현이 포함되어 있습니다. 다른 문구를 사용해주세요.');
+        return;
+      }
+
       // Prevent rapid duplicate submissions
       const dupKey = `submitted_review_${name}_${text}`;
       if (sessionStorage.getItem(dupKey)) {
@@ -1857,22 +1884,27 @@
         name,
         email,
         text,
+        approved: false,
         createdAt: new Date().toLocaleString('ko-KR')
       };
 
       await saveReview(review);
-      addReviewToCarousel(review);
 
       const isEvent = form.dataset.event === 'true';
       const successSub = isEvent
         ? '부스 스태프에게 굿즈를 받아가세요 :)'
-        : '소중한 기대평 감사합니다';
+        : '관리자 승인 후 공개됩니다';
 
       form.innerHTML = `
         <div class="review-success">
           <p class="review-success-icon">🎉</p>
           <p class="review-success-text">기대평 감사합니다!</p>
           <p class="review-success-sub">${successSub}</p>
+          <div class="review-success-preview">
+            <p class="review-success-label">✍️ 작성한 기대평</p>
+            <p class="review-success-quote">"${escapeHtml(text)}"</p>
+            <p class="review-success-author">— ${escapeHtml(name)}</p>
+          </div>
         </div>
       `;
 
@@ -2111,7 +2143,7 @@
           list.innerHTML = '<p class="admin-empty">아직 기대평이 없습니다.</p>';
         } else {
           list.innerHTML = reviews.map(r => `
-            <div class="admin-item">
+            <div class="admin-item${r.approved ? '' : ' admin-item-pending'}">
               <input type="checkbox" class="admin-item-check" data-review-id="${r.id}">
               <div class="admin-item-body">
                 <div class="admin-item-header">
@@ -2119,9 +2151,13 @@
                   ${r.email ? `<span class="admin-item-email">${escapeHtml(r.email)}</span>` : ''}
                   <span class="admin-item-book">${escapeHtml(r.bookTitle)}</span>
                   <span class="admin-item-date">${escapeHtml(r.createdAt)}</span>
+                  ${r.approved ? '<span class="admin-item-badge-approved">✅ 승인됨</span>' : '<span class="admin-item-badge-pending">⏳ 미승인</span>'}
                 </div>
                 <p class="admin-item-text">${escapeHtml(r.text)}</p>
-                <button class="admin-delete-btn" data-review-id="${r.id}">삭제</button>
+                <div class="admin-item-actions">
+                  ${r.approved ? '' : `<button class="admin-approve-btn" data-review-id="${r.id}">✅ 승인</button>`}
+                  <button class="admin-delete-btn" data-review-id="${r.id}">삭제</button>
+                </div>
               </div>
             </div>
           `).join('');
@@ -2157,6 +2193,13 @@
       }
 
       panel.classList.add('open');
+
+      document.querySelectorAll('.admin-approve-btn').forEach(btn => {
+        btn.addEventListener('click', async function() {
+          await approveReview(parseInt(this.dataset.reviewId));
+          openAdmin(tab);
+        });
+      });
 
       document.querySelectorAll('.admin-delete-btn').forEach(btn => {
         btn.addEventListener('click', async function() {

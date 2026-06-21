@@ -855,6 +855,35 @@ body.reader-open {
 .review-success-sub {
   font-size: 0.85rem;
   color: #7A8D7A;
+  margin-bottom: 12px;
+}
+
+.review-success-preview {
+  background: #F5F8F5;
+  border-radius: 10px;
+  padding: 14px;
+  margin-top: 8px;
+  text-align: left;
+}
+
+.review-success-label {
+  font-size: 0.75rem;
+  color: #8A9D8A;
+  margin-bottom: 6px;
+}
+
+.review-success-quote {
+  font-size: 0.9rem;
+  color: #2C3E2D;
+  line-height: 1.6;
+  font-style: italic;
+  margin-bottom: 4px;
+}
+
+.review-success-author {
+  font-size: 0.8rem;
+  color: #6A8D6A;
+  text-align: right;
 }
 
 /* ── E-Reader Overlay ── */
@@ -1477,6 +1506,41 @@ body.reader-open {
   color: #4A5D4A;
   line-height: 1.5;
   margin-bottom: 8px;
+}
+
+.admin-item-pending {
+  border-left: 3px solid #E8C84A;
+}
+
+.admin-item-badge-approved,
+.admin-item-badge-pending {
+  font-size: 0.75rem;
+  margin-left: 8px;
+}
+.admin-item-badge-pending {
+  color: #C9A84A;
+}
+
+.admin-item-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.admin-approve-btn {
+  padding: 6px 14px;
+  font-size: 0.8rem;
+  font-family: inherit;
+  color: #4A8A5A;
+  background: transparent;
+  border: 1px solid #8ABA8A;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.admin-approve-btn:hover {
+  background: #E4F5E4;
+  border-color: #4A8A5A;
 }
 
 .admin-delete-btn {
