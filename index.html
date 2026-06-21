@@ -2059,7 +2059,7 @@
       try {
         const hash = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pw))))
           .map(b => b.toString(16).padStart(2, '0')).join('');
-        return hash === 'd1eda9ab91b0fae01d8004b2b6504738ca9ca43fa2cfb612d6c53634eef2b90f';
+        return hash === 'f7a4368b1d02b33a2c56979c09392aa47a521518505e0918959a3f147bf68242';
       } catch {
         alert('보안 컨텍스트(HTTPS/localhost)에서만 관리자 인증이 가능합니다.');
         return false;
