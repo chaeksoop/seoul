@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.sheetjs.com https://www.gstatic.com; style-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:; font-src 'self' https://cdn.jsdelivr.net; connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com; frame-src 'none'; object-src 'none'">
   <title>책숲 - 책의 숲에서 잠시 멈춤.</title>
   <meta property="og:title" content="책숲 - 책의 숲에서 잠시 멈춤">
   <meta property="og:description" content="서울국제도서전 B109 · 컬처룩 &amp; 코쿤북스">
@@ -197,9 +198,9 @@
   </div>
 
   <script>
+    (function(){
     // ── Data ──
     const books = [
-  {
     "id": 1,
     "title": "창조적 행위: 존재의 방식",
     "titleEn": "The Creative Act: A Way of Being",
@@ -1172,7 +1173,7 @@
         const resp = await fetch(`data/books/${bookId}.json`);
         const encoded = await resp.text();
         ebookContent[bookId] = decodeBookData(encoded);
-      } catch {}
+      } catch (e) { console.error('fetchBook failed:', e); }
     }
     let activeTags = [];
     let currentReaderBookId = null;
@@ -1199,11 +1200,15 @@
           await batch.commit();
           localStorage.removeItem('chaeksoop_reviews');
         }
-      } catch {}
+      } catch (e) { console.error('loadReviews legacy batch failed:', e); }
       try {
         const snapshot = await db.collection('reviews').orderBy('id', 'desc').get();
-        reviewsCache = snapshot.docs.map(d => ({ ...d.data(), _firebaseId: d.id }));
-      } catch {
+        reviewsCache = snapshot.docs.map(d => {
+          const raw = d.data();
+          return { id: raw.id, bookId: raw.bookId, bookTitle: raw.bookTitle, name: raw.name, email: raw.email, text: raw.text, createdAt: raw.createdAt, _firebaseId: d.id };
+        });
+      } catch (e) {
+        console.error('loadReviews query failed:', e);
         reviewsCache = [];
       }
     }
@@ -1216,8 +1221,9 @@
       try {
         const docRef = await db.collection('reviews').add(review);
         reviewsCache.unshift({ ...review, _firebaseId: docRef.id });
-      } catch {
-        reviewsCache.unshift(review);
+      } catch (e) {
+        console.error('saveReview failed:', e);
+        reviewsCache.unshift({ id: review.id, bookId: review.bookId, bookTitle: review.bookTitle, name: review.name, email: review.email, text: review.text, createdAt: review.createdAt });
       }
     }
 
@@ -1225,7 +1231,7 @@
       try {
         const snapshot = await db.collection('reviews').where('id', '==', id).get();
         snapshot.forEach(d => d.ref.delete());
-      } catch {}
+      } catch (e) { console.error('deleteReview failed:', e); }
       reviewsCache = reviewsCache.filter(r => r.id !== id);
     }
 
@@ -1301,10 +1307,12 @@
     async function loadMessages() {
       try {
         const snapshot = await db.collection('messages').orderBy('createdAt', 'desc').get();
-        messagesCache = snapshot.docs.map(d => ({ ...d.data(), _firebaseId: d.id }));
-      } catch {
-        messagesCache = [];
-      }
+        messagesCache = snapshot.docs.map(d => {
+          const raw = d.data();
+          return { id: raw.id, bookId: raw.bookId, name: raw.name, contact: raw.contact, text: raw.text, createdAt: raw.createdAt, _firebaseId: d.id };
+        });
+      } catch (e) { console.error('loadMessages failed:', e); }
+      messagesCache = [];
     }
 
     function getMessages() {
@@ -1315,8 +1323,9 @@
       try {
         const docRef = await db.collection('messages').add(msg);
         messagesCache.unshift({ ...msg, _firebaseId: docRef.id });
-      } catch {
-        messagesCache.unshift(msg);
+      } catch (e) {
+        console.error('saveMessage failed:', e);
+        messagesCache.unshift({ id: msg.id, bookId: msg.bookId, name: msg.name, contact: msg.contact, text: msg.text, createdAt: msg.createdAt });
       }
     }
 
@@ -1324,7 +1333,7 @@
       try {
         const snapshot = await db.collection('messages').where('id', '==', id).get();
         snapshot.forEach(d => d.ref.delete());
-      } catch {}
+      } catch (e) { console.error('deleteMessage failed:', e); }
       messagesCache = messagesCache.filter(m => m.id !== id);
     }
 
@@ -1556,7 +1565,7 @@
 
     function loadRandomChapter(bookId) {
       const content = ebookContent[bookId];
-      if (!content || !content.chapters.length) return;
+      if (!content || !content.chapters || !content.chapters.length) return;
       if (!readChapters[bookId]) readChapters[bookId] = new Set();
 
       const total = content.chapters.length;
@@ -1567,7 +1576,11 @@
       if (remaining.length === 0) {
         document.getElementById('readerChapterTitle').textContent = '🎉 모든 이야기를 다 읽었습니다!';
         const container = document.getElementById('readerParagraphs');
-        container.innerHTML = '<button class="reader-restart-btn" onclick="readChapters[' + bookId + ']=new Set();loadRandomChapter(' + bookId + ')">처음부터 다시 읽으려면 클릭해주세요</button>';
+        container.innerHTML = '<button class="reader-restart-btn" id="readerRestartBtn">처음부터 다시 읽으려면 클릭해주세요</button>';
+        document.getElementById('readerRestartBtn').addEventListener('click', () => {
+          readChapters[bookId] = new Set();
+          loadRandomChapter(bookId);
+        });
         document.getElementById('nextChapterBtn').style.display = 'none';
         document.getElementById('readerEventReviewBtn').style.display = '';
         document.getElementById('readerNextChapter').style.display = 'block';
@@ -1583,14 +1596,18 @@
       document.getElementById('readerChapterTitle').textContent = chapter.title;
       const container = document.getElementById('readerParagraphs');
       container.innerHTML = '';
-      const items = chapter.content || chapter.paragraphs.map(p => ({type: 'text', value: p}));
+      const items = (chapter.content || (chapter.paragraphs || []).map(p => ({type: 'text', value: p})));
       items.forEach(item => {
         if (item.type === 'image') {
           const wrap = document.createElement('div');
           wrap.className = 'reader-image-wrap';
           const img = document.createElement('img');
           img.className = 'reader-image';
-          img.src = item.src;
+          if (item.src && (item.src.startsWith('http://') || item.src.startsWith('https://') || item.src.startsWith('/') || item.src.startsWith('./') || item.src.startsWith('data:'))) {
+            img.src = item.src;
+          } else {
+            img.alt = '(이미지를 불러올 수 없습니다)';
+          }
           img.alt = '';
           img.loading = 'lazy';
           wrap.appendChild(img);
@@ -1653,9 +1670,18 @@
         const email = emailInput ? emailInput.value.trim() : '';
         const text = textarea.value.trim();
         if (!name || !text) return;
+        // Prevent duplicate reviews per device
+        const reviewedBooks = JSON.parse(localStorage.getItem('chaeksoop_reviewed') || '[]');
+        const bookId = parseInt(this.dataset.bookId);
+        if (reviewedBooks.includes(bookId)) {
+          alert('이미 이 책에 기대평을 작성하셨습니다.');
+          return;
+        }
+        reviewedBooks.push(bookId);
+        localStorage.setItem('chaeksoop_reviewed', JSON.stringify(reviewedBooks));
         await saveReview({
           id: Date.now(),
-          bookId: parseInt(this.dataset.bookId),
+          bookId: bookId,
           bookTitle: this.dataset.bookTitle,
           name: name,
           email: email || undefined,
@@ -2094,11 +2120,17 @@
       }
     }
 
-    function openAdmin(tab) {
+    async function openAdmin(tab) {
       const panel = document.getElementById('adminPanel');
       const list = document.getElementById('adminList');
       const title = document.getElementById('adminTitle');
-      tab = tab || 'reviews';
+      if (!panel || !list || !title) return;
+
+      const pw = prompt('관리자 암호를 입력하세요');
+      if (!pw || !await checkAdminPassword(pw)) {
+        if (pw !== null) alert('암호가 틀렸습니다.');
+        return;
+      }
 
       document.querySelectorAll('.admin-tab').forEach(t => {
         t.classList.toggle('active', t.dataset.tab === tab);
@@ -2137,8 +2169,9 @@
           list.innerHTML = messages.map(m => {
             const nameEsc = escapeHtml(m.name || '익명');
             const contactEsc = escapeHtml(m.contact || '');
+            const contactUri = encodeURIComponent(m.contact || '');
             const contactHtml = m.contact
-              ? `<a href="mailto:${contactEsc}?subject=[책숲] 답변 드립니다" class="admin-msg-contact">📧 ${contactEsc}</a>`
+              ? `<a href="mailto:${contactUri}?subject=[%EC%B1%85%EC%88%B2]%20%EB%8B%B5%EB%B3%80%20%EB%93%9C%EB%A6%BD%EB%8B%88%EB%8B%A4" class="admin-msg-contact">📧 ${contactEsc}</a>`
               : `<span class="admin-msg-badge">연락처 없음</span>`;
             return `
             <div class="admin-item">
@@ -2232,6 +2265,7 @@
       try {
         XLSX.writeFile(wb, '기대평_데이터.xlsx', { password: pw });
       } catch {
+        alert('암호 설정에 실패하여 암호 없는 파일로 내보냅니다.');
         XLSX.writeFile(wb, '기대평_데이터.xlsx');
       }
     }
@@ -2494,6 +2528,7 @@
       renderBooks();
     }
     initData();
+  })();
   </script>
 
 </body>
