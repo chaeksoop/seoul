@@ -1172,7 +1172,7 @@
         const resp = await fetch(`data/books/${bookId}.json`);
         const encoded = await resp.text();
         ebookContent[bookId] = decodeBookData(encoded);
-      } catch {}
+      } catch (e) { console.error('fetchBook failed:', e); }
     }
     let activeTags = [];
     let currentReaderBookId = null;
@@ -1199,11 +1199,15 @@
           await batch.commit();
           localStorage.removeItem('chaeksoop_reviews');
         }
-      } catch {}
+      } catch (e) { console.error('loadReviews batch failed:', e); }
       try {
         const snapshot = await db.collection('reviews').orderBy('id', 'desc').get();
-        reviewsCache = snapshot.docs.map(d => ({ ...d.data(), _firebaseId: d.id }));
-      } catch {
+        reviewsCache = snapshot.docs.map(d => {
+          const raw = d.data();
+          return { id: raw.id, bookId: raw.bookId, bookTitle: raw.bookTitle, name: raw.name, email: raw.email, text: raw.text, createdAt: raw.createdAt, _firebaseId: d.id };
+        });
+      } catch (e) {
+        console.error('loadReviews query failed:', e);
         reviewsCache = [];
       }
     }
@@ -1216,16 +1220,16 @@
       try {
         const docRef = await db.collection('reviews').add(review);
         reviewsCache.unshift({ ...review, _firebaseId: docRef.id });
-      } catch {
+      } catch (e) {
+        console.error('saveReview failed:', e);
         reviewsCache.unshift(review);
       }
     }
-
     async function deleteReview(id) {
       try {
         const snapshot = await db.collection('reviews').where('id', '==', id).get();
         snapshot.forEach(d => d.ref.delete());
-      } catch {}
+      } catch (e) { console.error('deleteReview failed:', e); }
       reviewsCache = reviewsCache.filter(r => r.id !== id);
     }
 
@@ -1301,8 +1305,12 @@
     async function loadMessages() {
       try {
         const snapshot = await db.collection('messages').orderBy('createdAt', 'desc').get();
-        messagesCache = snapshot.docs.map(d => ({ ...d.data(), _firebaseId: d.id }));
-      } catch {
+        messagesCache = snapshot.docs.map(d => {
+          const raw = d.data();
+          return { id: raw.id, bookId: raw.bookId, name: raw.name, contact: raw.contact, text: raw.text, createdAt: raw.createdAt, _firebaseId: d.id };
+        });
+      } catch (e) {
+        console.error('loadMessages failed:', e);
         messagesCache = [];
       }
     }
@@ -1315,7 +1323,8 @@
       try {
         const docRef = await db.collection('messages').add(msg);
         messagesCache.unshift({ ...msg, _firebaseId: docRef.id });
-      } catch {
+      } catch (e) {
+        console.error('saveMessage failed:', e);
         messagesCache.unshift(msg);
       }
     }
@@ -1324,7 +1333,7 @@
       try {
         const snapshot = await db.collection('messages').where('id', '==', id).get();
         snapshot.forEach(d => d.ref.delete());
-      } catch {}
+      } catch (e) { console.error('deleteMessage failed:', e); }
       messagesCache = messagesCache.filter(m => m.id !== id);
     }
 
@@ -1556,7 +1565,7 @@
 
     function loadRandomChapter(bookId) {
       const content = ebookContent[bookId];
-      if (!content || !content.chapters.length) return;
+      if (!content || !content.chapters || !content.chapters.length) return;
       if (!readChapters[bookId]) readChapters[bookId] = new Set();
 
       const total = content.chapters.length;
@@ -1567,7 +1576,11 @@
       if (remaining.length === 0) {
         document.getElementById('readerChapterTitle').textContent = '🎉 모든 이야기를 다 읽었습니다!';
         const container = document.getElementById('readerParagraphs');
-        container.innerHTML = '<button class="reader-restart-btn" onclick="readChapters[' + bookId + ']=new Set();loadRandomChapter(' + bookId + ')">처음부터 다시 읽으려면 클릭해주세요</button>';
+        container.innerHTML = '<button class="reader-restart-btn" id="readerRestartBtn">처음부터 다시 읽으려면 클릭해주세요</button>';
+        document.getElementById('readerRestartBtn').addEventListener('click', () => {
+          readChapters[bookId] = new Set();
+          loadRandomChapter(bookId);
+        });
         document.getElementById('nextChapterBtn').style.display = 'none';
         document.getElementById('readerEventReviewBtn').style.display = '';
         document.getElementById('readerNextChapter').style.display = 'block';
@@ -1583,7 +1596,7 @@
       document.getElementById('readerChapterTitle').textContent = chapter.title;
       const container = document.getElementById('readerParagraphs');
       container.innerHTML = '';
-      const items = chapter.content || chapter.paragraphs.map(p => ({type: 'text', value: p}));
+      const items = chapter.content || (chapter.paragraphs || []).map(p => ({type: 'text', value: p}));
       items.forEach(item => {
         if (item.type === 'image') {
           const wrap = document.createElement('div');
@@ -1642,30 +1655,7 @@
 
     // ── Review Form Submit ──
     function attachReviewSubmit() {
-      const form = document.querySelector('.review-form');
-      if (!form) return;
-      form.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const nameInput = this.querySelector('.review-input');
-        const emailInput = this.querySelector('input[type="email"]');
-        const textarea = this.querySelector('.review-textarea');
-        const name = nameInput.value.trim();
-        const email = emailInput ? emailInput.value.trim() : '';
-        const text = textarea.value.trim();
-        if (!name || !text) return;
-        await saveReview({
-          id: Date.now(),
-          bookId: parseInt(this.dataset.bookId),
-          bookTitle: this.dataset.bookTitle,
-          name: name,
-          email: email || undefined,
-          text: text,
-          createdAt: new Date().toLocaleString('ko-KR')
-        });
-        document.getElementById('stopDrawer').classList.remove('open');
-        document.getElementById('stopDrawerOverlay').classList.remove('open');
-        alert('기대평이 저장되었습니다!');
-      });
+      // Handled via delegation in handleReviewSubmit
     }
 
     // ── Book Card ──
@@ -1851,6 +1841,14 @@
       const email = inputs[1].value.trim() || '';
       const text = form.querySelector('.review-textarea').value.trim();
       if (!text || !name) return;
+
+      // Prevent rapid duplicate submissions
+      const dupKey = `submitted_review_${name}_${text}`;
+      if (sessionStorage.getItem(dupKey)) {
+        alert('이미 제출된 기대평입니다.');
+        return;
+      }
+      sessionStorage.setItem(dupKey, '1');
 
       const review = {
         id: Date.now(),
@@ -2137,8 +2135,9 @@
           list.innerHTML = messages.map(m => {
             const nameEsc = escapeHtml(m.name || '익명');
             const contactEsc = escapeHtml(m.contact || '');
+            const contactUri = encodeURIComponent(m.contact || '');
             const contactHtml = m.contact
-              ? `<a href="mailto:${contactEsc}?subject=[책숲] 답변 드립니다" class="admin-msg-contact">📧 ${contactEsc}</a>`
+              ? `<a href="mailto:${contactUri}?subject=%5B%EC%B1%85%EC%88%B2%5D%20%EB%8B%B5%EB%B3%80%20%EB%93%9C%EB%A6%BD%EB%8B%88%EB%8B%A4" class="admin-msg-contact">📧 ${contactEsc}</a>`
               : `<span class="admin-msg-badge">연락처 없음</span>`;
             return `
             <div class="admin-item">
@@ -2299,19 +2298,6 @@
       const tab = e.target.closest('.admin-tab');
       if (!tab || tab.classList.contains('active')) return;
       openAdmin(tab.dataset.tab);
-    });
-
-    // ── Copy protection ──
-    document.addEventListener('copy', e => e.preventDefault());
-    document.addEventListener('cut', e => e.preventDefault());
-    document.addEventListener('contextmenu', e => e.preventDefault());
-    document.addEventListener('selectstart', e => {
-      if (!e.target.closest('input, textarea')) e.preventDefault();
-    });
-    document.addEventListener('keydown', e => {
-      if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'x' || e.key === 'C' || e.key === 'X')) {
-        e.preventDefault();
-      }
     });
 
     // ── Cover Carousel ──
