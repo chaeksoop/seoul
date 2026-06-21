@@ -886,6 +886,12 @@ body.reader-open {
   text-align: right;
 }
 
+.review-success-dismiss {
+  font-size: 0.75rem;
+  color: #AABAAA;
+  margin-top: 16px;
+}
+
 /* ── E-Reader Overlay ── */
 .reader-overlay {
   display: none;

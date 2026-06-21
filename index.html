@@ -1909,13 +1909,9 @@
             <p class="review-success-quote">"${escapeHtml(text)}"</p>
             <p class="review-success-author">— ${escapeHtml(name)}</p>
           </div>
+          <p class="review-success-dismiss">👆 바깥을 누르면 닫힙니다</p>
         </div>
       `;
-
-      // Close stop drawer if open
-      document.getElementById('stopDrawer').classList.remove('open');
-      document.getElementById('stopDrawerOverlay').classList.remove('open');
-      document.getElementById('floatingStopBtn').classList.remove('show');
     }
 
     // ── DOM Events ──
