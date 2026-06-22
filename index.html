@@ -52,7 +52,7 @@
         <span class="event-label">EVENT</span>
       </div>
       <div class="event-notice-bottom">
-        이벤트 도서를 읽고 기대평을 남기면 <strong>소정의 선물</strong>을 드려요! <span class="event-hint">클릭해서 펼치기</span>
+        기대평이나 인상적인 문구를 남기면 <strong>소정의 선물</strong>을 드려요! <span class="event-hint">클릭해서 펼치기</span>
       </div>
       <div class="event-books" id="eventBooks"></div>
     </div>
@@ -188,6 +188,8 @@
             <button class="admin-tab" data-tab="messages">💬 메시지</button>
           </div>
           <button id="adminSelectAllBtn" class="admin-select-btn">전체 선택</button>
+          <button id="adminBatchApproveBtn" class="admin-select-btn" disabled>✅ 선택 승인</button>
+          <button id="adminBatchUnapproveBtn" class="admin-select-btn" disabled>↩️ 선택 승인취소</button>
           <button id="adminBatchDeleteBtn" class="admin-select-btn danger" disabled>선택 삭제</button>
           <button id="exportExcelBtn" class="admin-export-btn">📥 엑셀</button>
           <button id="adminClose" class="admin-close">&times;</button>
@@ -1241,8 +1243,18 @@
         const snapshot = await db.collection('reviews').where('id', '==', id).get();
         snapshot.forEach(d => d.ref.update({ approved: true }));
         const r = reviewsCache.find(r => r.id === id);
-        if (r) { r.approved = true; addReviewToCarousel(r); }
+        if (r) { r.approved = true; }
+        buildReviewSlides(getReviews());
       } catch (e) { console.error('approveReview failed:', e); }
+    }
+    async function unapproveReview(id) {
+      try {
+        const snapshot = await db.collection('reviews').where('id', '==', id).get();
+        snapshot.forEach(d => d.ref.update({ approved: false }));
+        const r = reviewsCache.find(r => r.id === id);
+        if (r) { r.approved = false; }
+        buildReviewSlides(getReviews());
+      } catch (e) { console.error('unapproveReview failed:', e); }
     }
 
     // ── Review Carousel ──
@@ -1252,13 +1264,14 @@
       const inner = document.getElementById('reviewCarouselInner');
       const carousel = document.getElementById('reviewCarousel');
       if (!inner) return;
-      const visible = (reviews || []).filter(r => r.approved);
+      let visible = (reviews || []).filter(r => r.approved);
       if (visible.length === 0) {
         carousel.classList.remove('has-reviews');
         inner.innerHTML = '';
         return;
       }
       carousel.classList.add('has-reviews');
+      visible = shuffle(visible);
       inner.innerHTML = visible.map((r, i) =>
         `<div class="review-slide${i === 0 ? ' active' : ''}">` +
           `<span class="review-slide-icon">💬</span>` +
@@ -1426,7 +1439,7 @@
       if (book.pages) infoParts.push(`📄 ${book.pages}쪽`);
       if (book.isbn) infoParts.push(`🔖 ISBN: ${book.isbn}`);
       const readBtnPopup = book.event
-        ? `<button class="read-btn popup-read-btn" data-book-id="${book.id}"><span class="read-btn-icon">⏱️</span> 기대평 작성하고 이벤트 참여하기</button>`
+        ? `<button class="read-btn popup-read-btn" data-book-id="${book.id}"><span class="read-btn-icon">⏱️</span> 이벤트 참여하기</button>`
         : '';
       content.innerHTML = `
         <button class="book-popup-close" id="bookPopupCloseBtn">✕</button>
@@ -1702,7 +1715,7 @@
         : `<div class="book-cover-initials">${getInitials(book.title)}</div>`;
 
       const readBtnHTML = book.event
-        ? `<button class="read-btn read-5min-btn" data-book-id="${book.id}"><span class="read-btn-icon">⏱️</span> 기대평 작성하고 이벤트 참여하기</button>`
+        ? `<button class="read-btn read-5min-btn" data-book-id="${book.id}"><span class="read-btn-icon">⏱️</span> 이벤트 참여하기</button>`
         : '';
 
       card.innerHTML = `
@@ -1756,15 +1769,18 @@
           setTimeout(() => {
             const viewH = window.innerHeight;
             const btn = card.querySelector('.read-5min-btn');
-            if (btn) {
+            const reviewsContainer = card.querySelector('.book-reviews');
+            const bottomEl = reviewsContainer && reviewsContainer.children.length > 0
+              ? reviewsContainer : (btn || card.querySelector('.excerpt'));
+            if (bottomEl) {
               const cardRect = card.getBoundingClientRect();
-              const btnRect = btn.getBoundingClientRect();
+              const elRect = bottomEl.getBoundingClientRect();
               const padding = 80;
-              const targetMid = (cardRect.top + btnRect.bottom) / 2;
+              const targetMid = (cardRect.top + elRect.bottom) / 2;
               let scrollByAmount = targetMid - viewH / 2;
               const maxScroll = cardRect.top - padding;
               if (scrollByAmount > maxScroll) scrollByAmount = maxScroll;
-              const minScroll = btnRect.bottom - viewH;
+              const minScroll = elRect.bottom - viewH + 20;
               if (scrollByAmount < minScroll) scrollByAmount = minScroll;
               if (Math.abs(scrollByAmount) > 5) {
                 window.scrollBy({ top: scrollByAmount, behavior: 'smooth' });
@@ -1807,10 +1823,10 @@
     function renderBookReviews(bookId) {
       const container = document.querySelector(`.book-reviews[data-book-id="${bookId}"]`);
       if (!container) return;
-      const allReviews = getReviews().filter(r => r.bookId === bookId && r.approved);
+      const allReviews = getReviews().filter(r => r.bookId === bookId);
       if (allReviews.length === 0) { container.innerHTML = ''; return; }
       const shuffled = [...allReviews].sort(() => Math.random() - 0.5);
-      const selected = shuffled.slice(0, 3);
+      const selected = shuffled.slice(0, 5);
       container.innerHTML = `
         <div class="book-reviews-title">📖 독자 기대평</div>
         ${selected.map(r => `
@@ -2135,6 +2151,12 @@
       });
 
       document.getElementById('exportExcelBtn').style.display = tab === 'reviews' ? '' : 'none';
+      if (document.getElementById('adminBatchApproveBtn')) {
+        document.getElementById('adminBatchApproveBtn').style.display = tab === 'reviews' ? '' : 'none';
+      }
+      if (document.getElementById('adminBatchUnapproveBtn')) {
+        document.getElementById('adminBatchUnapproveBtn').style.display = tab === 'reviews' ? '' : 'none';
+      }
 
       if (tab === 'reviews') {
         title.textContent = '📋 기대평 관리';
@@ -2155,7 +2177,9 @@
                 </div>
                 <p class="admin-item-text">${escapeHtml(r.text)}</p>
                 <div class="admin-item-actions">
-                  ${r.approved ? '' : `<button class="admin-approve-btn" data-review-id="${r.id}">✅ 승인</button>`}
+                  ${r.approved
+                    ? `<button class="admin-unapprove-btn" data-review-id="${r.id}">↩️ 승인 취소</button>`
+                    : `<button class="admin-approve-btn" data-review-id="${r.id}">✅ 승인</button>`}
                   <button class="admin-delete-btn" data-review-id="${r.id}">삭제</button>
                 </div>
               </div>
@@ -2201,6 +2225,13 @@
         });
       });
 
+      document.querySelectorAll('.admin-unapprove-btn').forEach(btn => {
+        btn.addEventListener('click', async function() {
+          await unapproveReview(parseInt(this.dataset.reviewId));
+          openAdmin(tab);
+        });
+      });
+
       document.querySelectorAll('.admin-delete-btn').forEach(btn => {
         btn.addEventListener('click', async function() {
           const pw = prompt('관리자 암호를 입력하세요');
@@ -2219,24 +2250,35 @@
 
       const checks = document.querySelectorAll('.admin-item-check');
       const selectBtn = document.getElementById('adminSelectAllBtn');
-      const batchBtn = document.getElementById('adminBatchDeleteBtn');
+      const batchDeleteBtn = document.getElementById('adminBatchDeleteBtn');
+      const batchApproveBtn = document.getElementById('adminBatchApproveBtn');
+      const batchUnapproveBtn = document.getElementById('adminBatchUnapproveBtn');
 
-      function updateBatchBtn() {
+      function updateBatchBtns() {
         const checked = document.querySelectorAll('.admin-item-check:checked');
-        batchBtn.disabled = checked.length === 0;
-        batchBtn.textContent = checked.length > 0 ? `선택 삭제 (${checked.length})` : '선택 삭제';
+        const count = checked.length;
+        batchDeleteBtn.disabled = count === 0;
+        batchDeleteBtn.textContent = count > 0 ? `선택 삭제 (${count})` : '선택 삭제';
+        if (batchApproveBtn) {
+          batchApproveBtn.disabled = count === 0;
+          batchApproveBtn.textContent = count > 0 ? `✅ 선택 승인 (${count})` : '✅ 선택 승인';
+        }
+        if (batchUnapproveBtn) {
+          batchUnapproveBtn.disabled = count === 0;
+          batchUnapproveBtn.textContent = count > 0 ? `↩️ 선택 승인취소 (${count})` : '↩️ 선택 승인취소';
+        }
       }
 
-      checks.forEach(c => c.addEventListener('change', updateBatchBtn));
+      checks.forEach(c => c.addEventListener('change', updateBatchBtns));
 
       selectBtn.onclick = () => {
         const allChecked = checks.length > 0 && [...checks].every(c => c.checked);
         checks.forEach(c => c.checked = !allChecked);
         selectBtn.textContent = allChecked ? '전체 선택' : '선택 해제';
-        updateBatchBtn();
+        updateBatchBtns();
       };
 
-      batchBtn.onclick = async () => {
+      async function batchDelete() {
         const checked = [...document.querySelectorAll('.admin-item-check:checked')];
         if (checked.length === 0) return;
         const pw = prompt(`관리자 암호를 입력하세요 (${checked.length}개 삭제)`);
@@ -2244,15 +2286,32 @@
           if (pw !== null) alert('암호가 틀렸습니다.');
           return;
         }
-        batchBtn.disabled = true;
-        batchBtn.textContent = '삭제 중...';
+        batchDeleteBtn.disabled = true;
+        batchDeleteBtn.textContent = '삭제 중...';
         if (tab === 'reviews') {
           for (const c of checked) await deleteReview(parseInt(c.dataset.reviewId));
         } else {
           for (const c of checked) await deleteMessage(parseInt(c.dataset.msgId));
         }
         openAdmin(tab);
-      };
+      }
+
+      async function batchApproveUnapprove(approve) {
+        const checked = [...document.querySelectorAll('.admin-item-check:checked')];
+        if (checked.length === 0 || tab !== 'reviews') return;
+        batchDeleteBtn.disabled = true;
+        batchDeleteBtn.textContent = approve ? '승인 중...' : '취소 중...';
+        for (const c of checked) {
+          const id = parseInt(c.dataset.reviewId);
+          if (approve) await approveReview(id);
+          else await unapproveReview(id);
+        }
+        openAdmin(tab);
+      }
+
+      batchDeleteBtn.onclick = batchDelete;
+      if (batchApproveBtn) batchApproveBtn.onclick = () => batchApproveUnapprove(true);
+      if (batchUnapproveBtn) batchUnapproveBtn.onclick = () => batchApproveUnapprove(false);
     }
 
     function exportToExcel() {

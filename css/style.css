@@ -1549,6 +1549,22 @@ body.reader-open {
   border-color: #4A8A5A;
 }
 
+.admin-unapprove-btn {
+  padding: 6px 14px;
+  font-size: 0.8rem;
+  font-family: inherit;
+  color: #B08A4A;
+  background: transparent;
+  border: 1px solid #D5C48A;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.admin-unapprove-btn:hover {
+  background: #F5EDE0;
+  border-color: #B08A4A;
+}
+
 .admin-delete-btn {
   padding: 6px 14px;
   font-size: 0.8rem;
