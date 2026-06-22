@@ -1253,10 +1253,30 @@
       }
     }
     async function deleteReview(firebaseId) {
-      try {
-        await db.collection('reviews').doc(firebaseId).delete();
-      } catch (e) { console.error('deleteReview failed:', e); }
+      const review = reviewsCache.find(r => r._firebaseId === firebaseId);
+      let ok = false;
+      if (firebaseId && !firebaseId.startsWith('local_')) {
+        try {
+          await db.collection('reviews').doc(firebaseId).delete();
+          ok = true;
+        } catch (e) { console.error('deleteReview by docId failed:', e); }
+      }
+      if (!ok && review && review.id) {
+        try {
+          const snap = await db.collection('reviews').where('id', '==', review.id).get();
+          snap.forEach(d => d.ref.delete());
+          ok = snap.size > 0;
+        } catch (e) { console.error('deleteReview by id field failed:', e); }
+      }
+      if (!ok && review && review.id) {
+        try {
+          const snap = await db.collection('reviews').where('id', '==', String(review.id)).get();
+          snap.forEach(d => d.ref.delete());
+          ok = snap.size > 0;
+        } catch (e) { console.error('deleteReview by string id failed:', e); }
+      }
       reviewsCache = reviewsCache.filter(r => r._firebaseId !== firebaseId);
+      if (!ok) alert('Firestore 삭제에 실패했습니다. 페이지를 새로고침 후 다시 시도해주세요.');
     }
     async function approveReview(firebaseId) {
       try {
@@ -1477,10 +1497,23 @@
     }
 
     async function deleteMessage(firebaseId) {
-      try {
-        await db.collection('messages').doc(firebaseId).delete();
-      } catch (e) { console.error('deleteMessage failed:', e); }
+      const msg = messagesCache.find(m => m._firebaseId === firebaseId);
+      let ok = false;
+      if (firebaseId && !firebaseId.startsWith('local_')) {
+        try {
+          await db.collection('messages').doc(firebaseId).delete();
+          ok = true;
+        } catch (e) { console.error('deleteMessage by docId failed:', e); }
+      }
+      if (!ok && msg && msg.id) {
+        try {
+          const snap = await db.collection('messages').where('id', '==', msg.id).get();
+          snap.forEach(d => d.ref.delete());
+          ok = snap.size > 0;
+        } catch (e) { console.error('deleteMessage by id field failed:', e); }
+      }
       messagesCache = messagesCache.filter(m => m._firebaseId !== firebaseId);
+      if (!ok) alert('Firestore 삭제에 실패했습니다. 페이지를 새로고침 후 다시 시도해주세요.');
     }
 
     function getInitials(title) {
