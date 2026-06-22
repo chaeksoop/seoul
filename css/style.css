@@ -1373,7 +1373,6 @@ body.reader-open {
   display: none;
   flex-direction: column;
   box-shadow: 0 12px 48px rgba(44, 62, 45, 0.25);
-  animation: popupSlideUp 0.3s ease;
 }
 .review-list-popup.open {
   display: flex;
