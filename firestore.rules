@@ -3,18 +3,16 @@ service cloud.firestore {
   match /databases/{database}/documents {
     match /reviews/{document} {
       allow read: if true;
-      allow create: if request.resource.data.keys().hasAll(['id', 'bookId', 'text', 'createdAt', 'approved'])
+      allow create: if request.resource.data.keys().hasAll(['id', 'bookId', 'text', 'createdAt'])
                      && request.resource.data.text is string
-                     && request.resource.data.text.size() < 500
-                     && request.resource.data.approved == false;
-      allow update: if true;
-      allow delete: if true;
+                     && request.resource.data.text.size() < 500;
+      allow update, delete: if false;
     }
     match /messages/{document} {
       allow read: if true;
       allow create: if request.resource.data.keys().hasAll(['id', 'text'])
                      && request.resource.data.text is string;
-      allow delete: if true;
+      allow update, delete: if false;
     }
     match /{document=**} {
       allow read, write: if false;
