@@ -1539,7 +1539,14 @@ body.reader-open {
 
 .stop-drawer-icon {
   font-size: 2rem;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
+}
+
+.stop-drawer-desc {
+  font-size: 0.9rem;
+  color: #5A7A5A;
+  font-weight: 500;
+  margin-bottom: 4px;
 }
 
 .stop-drawer-title {
