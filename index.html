@@ -1298,10 +1298,11 @@
       const overlay = document.getElementById('reviewListOverlay');
       const popup = document.getElementById('reviewListPopup');
       const body = document.getElementById('reviewListBody');
-      const approved = getReviews().filter(r => r.approved);
+      let approved = getReviews().filter(r => r.approved);
       if (approved.length === 0) {
         body.innerHTML = '<p class="review-list-empty">아직 등록된 기대평이 없습니다.</p>';
       } else {
+        approved = shuffle(approved);
         body.innerHTML = approved.map(r => `
           <div class="review-list-item">
             <div class="review-list-text">"${escapeHtml(r.text)}"</div>
