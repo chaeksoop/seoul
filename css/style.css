@@ -1346,6 +1346,99 @@ body.reader-open {
   color: #8A9D8A;
 }
 
+/* ── Review List Popup ── */
+.review-list-popup-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 3100;
+  background: rgba(44, 62, 45, 0.4);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  display: none;
+}
+.review-list-popup-overlay.open {
+  display: block;
+}
+.review-list-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 3101;
+  background: #F7F9F6;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 480px;
+  max-height: 80vh;
+  display: none;
+  flex-direction: column;
+  box-shadow: 0 12px 48px rgba(44, 62, 45, 0.25);
+  animation: popupSlideUp 0.3s ease;
+}
+.review-list-popup.open {
+  display: flex;
+}
+.review-list-popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 12px;
+  border-bottom: 1px solid rgba(168, 201, 165, 0.2);
+  flex-shrink: 0;
+}
+.review-list-popup-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #2C3E2D;
+}
+.review-list-popup-close {
+  font-size: 1.4rem;
+  color: #8A9D8A;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+}
+.review-list-popup-body {
+  padding: 16px 24px 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+.review-list-item {
+  padding: 16px;
+  background: #fff;
+  border-radius: 12px;
+  margin-bottom: 10px;
+  border: 1px solid rgba(168, 201, 165, 0.1);
+}
+.review-list-text {
+  font-size: 0.92rem;
+  color: #4A5D4A;
+  line-height: 1.6;
+  font-style: italic;
+  margin-bottom: 6px;
+}
+.review-list-text::before { content: '\201C'; }
+.review-list-text::after { content: '\201D'; }
+.review-list-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-size: 0.78rem;
+  color: #8A9D8A;
+}
+.review-list-author {
+  font-weight: 500;
+  color: #6B8A6B;
+}
+.review-list-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: #A8BDA5;
+  font-size: 0.95rem;
+}
+
 /* ── Floating Stop Button ── */
 .floating-stop-btn {
   display: none;

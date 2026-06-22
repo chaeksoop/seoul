@@ -187,6 +187,16 @@
     </div>
   </div>
 
+  <!-- Review List Popup -->
+  <div class="review-list-popup-overlay" id="reviewListOverlay"></div>
+  <div class="review-list-popup" id="reviewListPopup">
+    <div class="review-list-popup-header">
+      <span class="review-list-popup-title">📖 모든 기대평</span>
+      <button class="review-list-popup-close" id="reviewListClose">&times;</button>
+    </div>
+    <div class="review-list-popup-body" id="reviewListBody"></div>
+  </div>
+
   <!-- Admin Panel -->
   <div id="adminPanel" class="admin-panel">
     <div class="admin-overlay"></div>
@@ -1329,6 +1339,34 @@
       startReviewRotation(allSlides.length);
     }
 
+    function openReviewList() {
+      const overlay = document.getElementById('reviewListOverlay');
+      const popup = document.getElementById('reviewListPopup');
+      const body = document.getElementById('reviewListBody');
+      const approved = getReviews().filter(r => r.approved);
+      if (approved.length === 0) {
+        body.innerHTML = '<p class="review-list-empty">아직 등록된 기대평이 없습니다.</p>';
+      } else {
+        body.innerHTML = approved.map(r => `
+          <div class="review-list-item">
+            <div class="review-list-text">"${escapeHtml(r.text)}"</div>
+            <div class="review-list-meta">
+              <span class="review-list-author">— ${escapeHtml(r.name)}</span>
+              ${r.bookTitle ? `<span class="review-list-book">· 《${escapeHtml(r.bookTitle)}》</span>` : ''}
+              <span class="review-list-date">${escapeHtml(r.createdAt)}</span>
+            </div>
+          </div>
+        `).join('');
+      }
+      overlay.classList.add('open');
+      popup.classList.add('open');
+    }
+
+    function closeReviewList() {
+      document.getElementById('reviewListOverlay').classList.remove('open');
+      document.getElementById('reviewListPopup').classList.remove('open');
+    }
+
     function escapeHtml(str) {
       if (!str) return '';
       const div = document.createElement('div');
@@ -1899,7 +1937,7 @@
       const allReviews = getReviews().filter(r => r.bookId === bookId);
       if (allReviews.length === 0) { container.innerHTML = ''; return; }
       const shuffled = [...allReviews].sort(() => Math.random() - 0.5);
-      const selected = shuffled.slice(0, 5);
+      const selected = shuffled.slice(0, 3);
       container.innerHTML = `
         <div class="book-reviews-title">📖 독자 기대평</div>
         ${selected.map(r => `
@@ -2162,6 +2200,17 @@
       document.getElementById('reviewSuccessPopup').classList.remove('open');
       stopConfetti();
     });
+
+    // Review carousel click → show all reviews
+    document.getElementById('reviewCarousel').addEventListener('click', (e) => {
+      if (e.target.closest('.review-slide') || e.target.closest('#reviewCarouselInner')) {
+        openReviewList();
+      }
+    });
+
+    // Review list popup close
+    document.getElementById('reviewListOverlay').addEventListener('click', closeReviewList);
+    document.getElementById('reviewListClose').addEventListener('click', closeReviewList);
 
     // Admin panel
     let logoClickCount = 0;
