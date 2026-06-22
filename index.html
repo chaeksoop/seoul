@@ -1905,13 +1905,19 @@
         return;
       }
 
-      // Prevent rapid duplicate submissions
-      const dupKey = `submitted_review_${name}_${text}`;
-      if (sessionStorage.getItem(dupKey)) {
-        alert('이미 제출된 기대평입니다.');
-        return;
+      // Check duplicate in Firestore (accounts for Console deletions)
+      try {
+        const snap = await db.collection('reviews')
+          .where('name', '==', name)
+          .where('text', '==', text)
+          .get();
+        if (!snap.empty) {
+          alert('이미 제출된 기대평입니다.');
+          return;
+        }
+      } catch (e) {
+        console.error('Duplicate check query failed:', e);
       }
-      sessionStorage.setItem(dupKey, '1');
 
       const review = {
         id: Date.now(),
