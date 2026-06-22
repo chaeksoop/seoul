@@ -22,10 +22,7 @@ body {
   -webkit-user-select: none;
 }
 
-input, textarea {
-  user-select: text;
-  -webkit-user-select: text;
-}
+
 
 body.reader-open {
   overflow: hidden;
