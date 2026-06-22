@@ -179,8 +179,9 @@
   <!-- Review Success Popup -->
   <div class="review-success-popup" id="reviewSuccessPopup">
     <div class="review-success-popup-overlay" id="reviewSuccessOverlay"></div>
-      <div class="review-success-popup-content">
-        <div class="review-success-popup-title" id="reviewSuccessTitle"></div>
+    <canvas id="confettiCanvas"></canvas>
+    <div class="review-success-popup-content">
+      <div class="review-success-popup-title" id="reviewSuccessTitle"></div>
       <div class="review-success-popup-sub" id="reviewSuccessSub"></div>
       <div class="review-success-popup-review" id="reviewSuccessReview"></div>
     </div>
@@ -1341,8 +1342,69 @@
       return BAD_WORDS.some(w => lower.includes(w.toLowerCase()));
     }
 
+    // ── Confetti ──
+    let confettiInterval = null;
+    function startConfetti() {
+      const canvas = document.getElementById('confettiCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      const colors = ['#A8C9A5','#D4A853','#E8A87C','#85CDCA','#F4A7A7','#B8A8D8','#F7DC6F'];
+      const pieces = Array.from({length: 120}, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height - canvas.height,
+        w: 4 + Math.random() * 6,
+        h: 4 + Math.random() * 10,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        vy: 1 + Math.random() * 2,
+        vx: -1 + Math.random() * 2,
+        rot: Math.random() * 360,
+        rotV: -3 + Math.random() * 6,
+        opacity: 0.8 + Math.random() * 0.2
+      }));
+      if (confettiInterval) clearInterval(confettiInterval);
+      let frames = 0;
+      confettiInterval = setInterval(() => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let alive = false;
+        pieces.forEach(p => {
+          p.y += p.vy;
+          p.x += p.vx;
+          p.rot += p.rotV;
+          p.vy += 0.02;
+          if (p.y < canvas.height + 20) alive = true;
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rot * Math.PI / 180);
+          ctx.globalAlpha = p.opacity * Math.max(0, 1 - (p.y + 20) / (canvas.height + 40));
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+          ctx.restore();
+        });
+        frames++;
+        if (!alive || frames > 300) {
+          clearInterval(confettiInterval);
+          confettiInterval = null;
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+      }, 20);
+    }
+    function stopConfetti() {
+      if (confettiInterval) {
+        clearInterval(confettiInterval);
+        confettiInterval = null;
+      }
+      const canvas = document.getElementById('confettiCanvas');
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+
     window.addEventListener('beforeunload', () => {
       if (reviewCarouselTimer) clearInterval(reviewCarouselTimer);
+      stopConfetti();
     });
 
     // ── Messages (Firestore) ──
@@ -1948,6 +2010,7 @@
         `<div class="review-success-quote">"${escapeHtml(text)}"</div>` +
         `<div class="review-success-author">— ${escapeHtml(name)}</div>`;
       document.getElementById('reviewSuccessPopup').classList.add('open');
+      if (isEvent) startConfetti();
     }
 
     // ── DOM Events ──
@@ -2109,6 +2172,7 @@
     // Review success popup close
     document.getElementById('reviewSuccessOverlay').addEventListener('click', () => {
       document.getElementById('reviewSuccessPopup').classList.remove('open');
+      stopConfetti();
     });
 
     // Review carousel click → show all reviews
