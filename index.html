@@ -1517,10 +1517,10 @@
           ${book.subtitle ? `<p class="book-popup-subtitle">${book.subtitle}</p>` : ''}
           <p class="book-popup-author">${book.author}</p>
           <div class="book-popup-meta">${infoParts.join(' · ')}</div>
+          ${readBtnPopup}
           <p class="book-popup-desc">${book.description}</p>
           ${book.excerpt ? `<div class="book-popup-excerpt">${book.excerpt}</div>` : ''}
           <p class="book-popup-publisher">${book.publisher}</p>
-          ${readBtnPopup}
         </div>
       `;
       overlay.classList.add('open');

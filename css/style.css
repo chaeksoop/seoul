@@ -2469,7 +2469,7 @@ body.reader-open {
 
 .popup-read-btn,
 .popup-review-btn {
-  margin-top: 16px;
+  margin: 16px 0;
 }
 
 /* ── Review Carousel ── */
