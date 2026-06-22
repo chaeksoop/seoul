@@ -171,7 +171,7 @@
   <div class="stop-drawer" id="stopDrawer">
       <div class="stop-drawer-header">
         <div class="stop-drawer-icon">📝</div>
-        <div class="stop-drawer-desc">인상적인 구절이나 기대평을 남겨주세요</div>
+        <div class="stop-drawer-desc" id="stopDrawerDesc">인상적인 구절이나 기대평을 남겨주세요</div>
       </div>
     <div id="stopDrawerForm"></div>
   </div>
@@ -1506,7 +1506,7 @@
       if (book.isbn) infoParts.push(`🔖 ISBN: ${book.isbn}`);
       const readBtnPopup = book.event
         ? `<button class="read-btn popup-read-btn" data-book-id="${book.id}"><span class="read-btn-icon">⏱️</span> 이벤트 참여하기</button>`
-        : '';
+        : `<button class="read-btn popup-review-btn" data-book-id="${book.id}"><span class="read-btn-icon">✍️</span> 리뷰 작성하기</button>`;
       content.innerHTML = `
         <button class="book-popup-close" id="bookPopupCloseBtn">✕</button>
         <div class="book-popup-cover" style="background:${book.color}">
@@ -1541,20 +1541,29 @@
           openReader(book.id);
         });
       }
+      const popupReviewBtn = content.querySelector('.popup-review-btn');
+      if (popupReviewBtn) {
+        popupReviewBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          overlay.classList.remove('open');
+          openStopDrawer(book.id, 0);
+        });
+      }
 
     }
     function createReviewFormHTML(bookId, bookTitle, isEvent, timeStr) {
-      const btnText = isEvent ? '기대평 남기고 굿즈 받기' : '기대평 남기기';
+      const btnText = isEvent ? '기대평 남기고 굿즈 받기' : '리뷰 남기기';
       const checkboxText = isEvent
         ? '개인정보 수집 및 굿즈 응모에 동의합니다'
         : '';
       const timeHtml = timeStr ? `<div class="review-read-time">⏱️ ${timeStr} 동안 읽었습니다</div>` : '';
+      const placeholder = isEvent ? '인상적인 구절이나 기대평을 남겨주세요' : '인상적인 구절이나 리뷰를 남겨주세요';
       return `
         <form class="review-form" data-book-id="${bookId}" data-book-title="${bookTitle}" data-event="${isEvent}">
           ${timeHtml}
           <input type="text" class="review-input" placeholder="이름 또는 별명" maxlength="20" required>
           <input type="email" class="review-input" placeholder="이메일 (선택)" maxlength="100">
-          <textarea class="review-textarea" placeholder="인상적인 구절이나 기대평을 남겨주세요" maxlength="200" required></textarea>
+          <textarea class="review-textarea" placeholder="${placeholder}" maxlength="200" required></textarea>
           <div class="review-char-count"><span class="review-count">0</span>/200</div>
           ${isEvent ? `<label class="review-checkbox">
             <input type="checkbox" required>
@@ -1745,6 +1754,9 @@
       const timeStr = elapsedSeconds > 0 ? `${mins}:${secs.toString().padStart(2, '0')}` : '';
       const formHTML = createReviewFormHTML(book.id, book.title, book.event, timeStr);
       document.getElementById('stopDrawerForm').innerHTML = formHTML;
+      document.getElementById('stopDrawerDesc').textContent = book.event
+        ? '인상적인 구절이나 기대평을 남겨주세요'
+        : '인상적인 구절이나 리뷰를 남겨주세요';
       attachReviewSubmit();
       document.getElementById('stopDrawer').classList.add('open');
       document.getElementById('stopDrawerOverlay').classList.add('open');

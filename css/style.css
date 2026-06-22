@@ -2471,7 +2471,8 @@ body.reader-open {
   margin-top: 14px;
 }
 
-.popup-read-btn {
+.popup-read-btn,
+.popup-review-btn {
   margin-top: 16px;
 }
 
