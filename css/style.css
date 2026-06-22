@@ -741,6 +741,13 @@ body.reader-open {
   display: inline-block;
 }
 
+.review-form-desc {
+  font-size: 0.9rem;
+  color: #5A7A5A;
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+
 .review-input {
   width: 100%;
   padding: 12px 14px;
