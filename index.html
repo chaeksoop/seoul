@@ -2194,6 +2194,14 @@
     // ── Back button (popstate) closes all overlays ──
     function closeAllOverlays() {
       document.querySelectorAll('.open').forEach(el => el.classList.remove('open'));
+      const ef = document.getElementById('eventFilter');
+      if (ef.classList.contains('active')) {
+        ef.classList.remove('active');
+        document.querySelector('.event-hint').textContent = '클릭해서 펼치기';
+        document.getElementById('eventBooks').innerHTML = '';
+        renderBooks();
+        buildCarousel();
+      }
       document.body.classList.remove('reader-open');
       if (readerTimerInterval) { clearInterval(readerTimerInterval); readerTimerInterval = null; }
       currentReaderBookId = null;
