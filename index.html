@@ -179,9 +179,8 @@
   <!-- Review Success Popup -->
   <div class="review-success-popup" id="reviewSuccessPopup">
     <div class="review-success-popup-overlay" id="reviewSuccessOverlay"></div>
-    <div class="review-success-popup-content">
-      <div class="review-success-popup-icon">🎉</div>
-      <div class="review-success-popup-title" id="reviewSuccessTitle"></div>
+      <div class="review-success-popup-content">
+        <div class="review-success-popup-title" id="reviewSuccessTitle"></div>
       <div class="review-success-popup-sub" id="reviewSuccessSub"></div>
       <div class="review-success-popup-review" id="reviewSuccessReview"></div>
     </div>
@@ -1938,7 +1937,7 @@
         : '소중한 리뷰 감사합니다!';
       document.getElementById('reviewSuccessSub').textContent = isEvent
         ? '부스 스태프에게 화면을 보여주고 굿즈를 받아가세요. :)'
-        : '';
+        : '이벤트에도 참여해보세요';
       document.getElementById('reviewSuccessReview').innerHTML =
         `<div class="review-success-quote">"${escapeHtml(text)}"</div>` +
         `<div class="review-success-author">— ${escapeHtml(name)}</div>`;

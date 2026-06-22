@@ -1313,10 +1313,6 @@ body.reader-open {
   animation: popupSlideUp 0.35s ease;
   z-index: 2;
 }
-.review-success-popup-icon {
-  font-size: 2.8rem;
-  margin-bottom: 14px;
-}
 .review-success-popup-title {
   font-size: 1.2rem;
   font-weight: 700;
