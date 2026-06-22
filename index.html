@@ -2052,6 +2052,7 @@
       document.querySelector('.event-hint').textContent = isActive ? '클릭해서 접기' : '클릭해서 펼치기';
       const container = document.getElementById('eventBooks');
       if (isActive) {
+        history.pushState({popup: true}, '');
         const eventBooks = books.filter(b => b.event).sort(() => Math.random() - 0.5);
         container.innerHTML = '<div class="event-books-list" id="eventBooksList"></div>';
         const list = document.getElementById('eventBooksList');
