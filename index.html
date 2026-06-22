@@ -1249,30 +1249,27 @@
         reviewsCache.unshift({ ...review, _firebaseId: docRef.id });
       } catch (e) {
         console.error('saveReview failed:', e);
-        reviewsCache.unshift(review);
+        reviewsCache.unshift({ ...review, _firebaseId: 'local_' + review.id });
       }
     }
-    async function deleteReview(id) {
+    async function deleteReview(firebaseId) {
       try {
-        const snapshot = await db.collection('reviews').where('id', '==', id).get();
-        snapshot.forEach(d => d.ref.delete());
+        await db.collection('reviews').doc(firebaseId).delete();
       } catch (e) { console.error('deleteReview failed:', e); }
-      reviewsCache = reviewsCache.filter(r => r.id !== id);
+      reviewsCache = reviewsCache.filter(r => r._firebaseId !== firebaseId);
     }
-    async function approveReview(id) {
+    async function approveReview(firebaseId) {
       try {
-        const snapshot = await db.collection('reviews').where('id', '==', id).get();
-        snapshot.forEach(d => d.ref.update({ approved: true }));
-        const r = reviewsCache.find(r => r.id === id);
+        await db.collection('reviews').doc(firebaseId).update({ approved: true });
+        const r = reviewsCache.find(r => r._firebaseId === firebaseId);
         if (r) { r.approved = true; }
         buildReviewSlides(getReviews());
       } catch (e) { console.error('approveReview failed:', e); }
     }
-    async function unapproveReview(id) {
+    async function unapproveReview(firebaseId) {
       try {
-        const snapshot = await db.collection('reviews').where('id', '==', id).get();
-        snapshot.forEach(d => d.ref.update({ approved: false }));
-        const r = reviewsCache.find(r => r.id === id);
+        await db.collection('reviews').doc(firebaseId).update({ approved: false });
+        const r = reviewsCache.find(r => r._firebaseId === firebaseId);
         if (r) { r.approved = false; }
         buildReviewSlides(getReviews());
       } catch (e) { console.error('unapproveReview failed:', e); }
@@ -1479,12 +1476,11 @@
       }
     }
 
-    async function deleteMessage(id) {
+    async function deleteMessage(firebaseId) {
       try {
-        const snapshot = await db.collection('messages').where('id', '==', id).get();
-        snapshot.forEach(d => d.ref.delete());
+        await db.collection('messages').doc(firebaseId).delete();
       } catch (e) { console.error('deleteMessage failed:', e); }
-      messagesCache = messagesCache.filter(m => m.id !== id);
+      messagesCache = messagesCache.filter(m => m._firebaseId !== firebaseId);
     }
 
     function getInitials(title) {
@@ -2292,7 +2288,7 @@
         } else {
           list.innerHTML = reviews.map(r => `
             <div class="admin-item${r.approved ? '' : ' admin-item-pending'}">
-              <input type="checkbox" class="admin-item-check" data-review-id="${r.id}">
+              <input type="checkbox" class="admin-item-check" data-review-id="${r._firebaseId}">
               <div class="admin-item-body">
                 <div class="admin-item-header">
                   <strong>${escapeHtml(r.name)}</strong>
@@ -2304,9 +2300,9 @@
                 <p class="admin-item-text">${escapeHtml(r.text)}</p>
                 <div class="admin-item-actions">
                   ${r.approved
-                    ? `<button class="admin-unapprove-btn" data-review-id="${r.id}">↩️ 승인 취소</button>`
-                    : `<button class="admin-approve-btn" data-review-id="${r.id}">✅ 승인</button>`}
-                  <button class="admin-delete-btn" data-review-id="${r.id}">삭제</button>
+                    ? `<button class="admin-unapprove-btn" data-review-id="${r._firebaseId}">↩️ 승인 취소</button>`
+                    : `<button class="admin-approve-btn" data-review-id="${r._firebaseId}">✅ 승인</button>`}
+                  <button class="admin-delete-btn" data-review-id="${r._firebaseId}">삭제</button>
                 </div>
               </div>
             </div>
@@ -2327,7 +2323,7 @@
               : `<span class="admin-msg-badge">연락처 없음</span>`;
             return `
             <div class="admin-item">
-              <input type="checkbox" class="admin-item-check" data-msg-id="${m.id}">
+              <input type="checkbox" class="admin-item-check" data-msg-id="${m._firebaseId}">
               <div class="admin-item-body">
                 <div class="admin-item-header">
                   <strong>${nameEsc}</strong>
@@ -2335,7 +2331,7 @@
                   <span class="admin-item-date">${escapeHtml(m.createdAt)}</span>
                 </div>
                 <p class="admin-item-text">${escapeHtml(m.text)}</p>
-                <button class="admin-delete-btn" data-msg-id="${m.id}">삭제</button>
+                <button class="admin-delete-btn" data-msg-id="${m._firebaseId}">삭제</button>
               </div>
             </div>
           `}).join('');
@@ -2346,14 +2342,14 @@
 
       document.querySelectorAll('.admin-approve-btn').forEach(btn => {
         btn.addEventListener('click', async function() {
-          await approveReview(parseInt(this.dataset.reviewId));
+          await approveReview(this.dataset.reviewId);
           openAdmin(tab);
         });
       });
 
       document.querySelectorAll('.admin-unapprove-btn').forEach(btn => {
         btn.addEventListener('click', async function() {
-          await unapproveReview(parseInt(this.dataset.reviewId));
+          await unapproveReview(this.dataset.reviewId);
           openAdmin(tab);
         });
       });
@@ -2363,9 +2359,9 @@
           const pw = prompt('관리자 암호를 입력하세요');
           if (await checkAdminPassword(pw)) {
             if (tab === 'reviews') {
-              await deleteReview(parseInt(this.dataset.reviewId));
+              await deleteReview(this.dataset.reviewId);
             } else {
-              await deleteMessage(parseInt(this.dataset.msgId));
+              await deleteMessage(this.dataset.msgId);
             }
             openAdmin(tab);
           } else if (pw !== null) {
@@ -2415,9 +2411,9 @@
         batchDeleteBtn.disabled = true;
         batchDeleteBtn.textContent = '삭제 중...';
         if (tab === 'reviews') {
-          for (const c of checked) await deleteReview(parseInt(c.dataset.reviewId));
+          for (const c of checked) await deleteReview(c.dataset.reviewId);
         } else {
-          for (const c of checked) await deleteMessage(parseInt(c.dataset.msgId));
+          for (const c of checked) await deleteMessage(c.dataset.msgId);
         }
         openAdmin(tab);
       }
@@ -2428,9 +2424,8 @@
         batchDeleteBtn.disabled = true;
         batchDeleteBtn.textContent = approve ? '승인 중...' : '취소 중...';
         for (const c of checked) {
-          const id = parseInt(c.dataset.reviewId);
-          if (approve) await approveReview(id);
-          else await unapproveReview(id);
+          if (approve) await approveReview(c.dataset.reviewId);
+          else await unapproveReview(c.dataset.reviewId);
         }
         openAdmin(tab);
       }

@@ -7,14 +7,14 @@ service cloud.firestore {
                      && request.resource.data.text is string
                      && request.resource.data.text.size() < 500
                      && request.resource.data.approved == false;
-      allow update: if request.resource.data.approved == true;
-      allow delete: if false;
+      allow update: if true;
+      allow delete: if true;
     }
     match /messages {
       allow read: if true;
       allow create: if request.resource.data.keys().hasAll(['id', 'text'])
                      && request.resource.data.text is string;
-      allow delete: if false;
+      allow delete: if true;
     }
     match /{document=**} {
       allow read, write: if false;
