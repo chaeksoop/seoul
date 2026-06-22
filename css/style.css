@@ -1277,7 +1277,7 @@ body.reader-open {
   display: none;
   position: fixed;
   inset: 0;
-  z-index: 3000;
+  z-index: 3100;
   align-items: center;
   justify-content: center;
   padding: 20px;
@@ -1431,6 +1431,13 @@ body.reader-open {
 .review-list-author {
   font-weight: 500;
   color: #6B8A6B;
+}
+.review-list-book {
+  color: #A0B8A0;
+}
+.review-list-date {
+  color: #B0C0B0;
+  font-size: 0.72rem;
 }
 .review-list-empty {
   text-align: center;

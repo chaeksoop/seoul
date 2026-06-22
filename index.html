@@ -1204,7 +1204,6 @@
     let readerElapsedSeconds = 0;
     let readerStarted = false;
     let readerCompleted = false;
-    let readerContinueMode = false;
     let readChapters = {}; // bookId -> Set of indices read this session
     let completionPopupShown = false;
 
@@ -1472,6 +1471,11 @@
       }
     }
 
+    window.addEventListener('beforeunload', () => {
+      if (reviewCarouselTimer) clearInterval(reviewCarouselTimer);
+      stopConfetti();
+    });
+
     // ── Messages (Firestore) ──
     let messagesCache = [];
 
@@ -1612,7 +1616,7 @@
       });
       overlay.addEventListener('click', (e) => {
         if (e.target === overlay) overlay.classList.remove('open');
-      });
+      }, { once: true });
       const popupReadBtn = content.querySelector('.popup-read-btn');
       if (popupReadBtn) {
         popupReadBtn.addEventListener('click', (e) => {
@@ -1660,7 +1664,6 @@
       readerElapsedSeconds = 0;
       readerStarted = false;
       readerCompleted = false;
-      readerContinueMode = false;
       completionPopupShown = false;
 
       document.getElementById('readerTitle').textContent = book.title;
