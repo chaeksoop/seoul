@@ -1315,11 +1315,11 @@
       }
       overlay.classList.add('open');
       popup.classList.add('open');
+      history.pushState({popup: true}, '');
     }
 
     function closeReviewList() {
-      document.getElementById('reviewListOverlay').classList.remove('open');
-      document.getElementById('reviewListPopup').classList.remove('open');
+      closeAllOverlays();
     }
 
     function escapeHtml(str) {
@@ -1524,6 +1524,7 @@
         </div>
       `;
       overlay.classList.add('open');
+      history.pushState({popup: true}, '');
       document.getElementById('bookPopupCloseBtn').addEventListener('click', () => {
         overlay.classList.remove('open');
       });
@@ -1608,6 +1609,7 @@
 
       document.getElementById('readerOverlay').classList.add('open');
       document.body.classList.add('reader-open');
+      history.pushState({popup: true}, '');
 
       // Scroll to top
       document.getElementById('readerOverlay').scrollTop = 0;
@@ -1757,6 +1759,7 @@
       attachReviewSubmit();
       document.getElementById('stopDrawer').classList.add('open');
       document.getElementById('stopDrawerOverlay').classList.add('open');
+      history.pushState({popup: true}, '');
     }
 
     function handleFloatingStop() {
@@ -2010,6 +2013,7 @@
         `<div class="review-success-quote">"${escapeHtml(text)}"</div>` +
         `<div class="review-success-author">— ${escapeHtml(name)}</div>`;
       document.getElementById('reviewSuccessPopup').classList.add('open');
+      history.pushState({popup: true}, '');
       if (isEvent) startConfetti();
     }
 
@@ -2128,6 +2132,7 @@
       renderChips();
       document.getElementById('chipsModal').classList.add('open');
       document.getElementById('chipsModalOverlay').classList.add('open');
+      history.pushState({popup: true}, '');
     });
 
     function closeChipsModal() {
@@ -2186,12 +2191,22 @@
     document.getElementById('reviewListOverlay').addEventListener('click', closeReviewList);
     document.getElementById('reviewListClose').addEventListener('click', closeReviewList);
 
-
+    // ── Back button (popstate) closes all overlays ──
+    function closeAllOverlays() {
+      document.querySelectorAll('.open').forEach(el => el.classList.remove('open'));
+      document.body.classList.remove('reader-open');
+      if (readerTimerInterval) { clearInterval(readerTimerInterval); readerTimerInterval = null; }
+      currentReaderBookId = null;
+      document.getElementById('floatingStopBtn').classList.remove('show');
+      stopConfetti();
+    }
+    window.addEventListener('popstate', closeAllOverlays);
 
     // ── Message Modal ──
     document.getElementById('floatingMsgBtn').addEventListener('click', () => {
       document.getElementById('msgModal').classList.add('open');
       document.getElementById('msgModalOverlay').classList.add('open');
+      history.pushState({popup: true}, '');
       document.getElementById('msgForm').style.display = '';
       document.getElementById('msgSuccess').style.display = 'none';
       document.getElementById('msgForm').reset();
