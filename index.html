@@ -52,7 +52,7 @@
         <span class="event-label">EVENT</span>
       </div>
       <div class="event-notice-bottom">
-        책 속 한 줄이나 기대평을 남기면 <strong>소정의 선물</strong>을 드려요! <span class="event-hint">클릭해서 펼치기</span>
+        인상적인 구절이나 기대평을 남기면 <strong>소정의 선물</strong>을 드려요! <span class="event-hint">클릭해서 펼치기</span>
       </div>
       <div class="event-books" id="eventBooks"></div>
     </div>
@@ -1550,10 +1550,10 @@
       return `
         <form class="review-form" data-book-id="${bookId}" data-book-title="${bookTitle}" data-event="${isEvent}">
           ${timeHtml}
-          <p class="review-form-desc">📝 책 속 한 줄이나 기대평을 남겨주세요</p>
+          <p class="review-form-desc">📝 인상적인 구절이나 기대평을 남겨주세요</p>
           <input type="text" class="review-input" placeholder="이름 또는 별명" maxlength="20" required>
           <input type="email" class="review-input" placeholder="이메일 (선택)" maxlength="100">
-          <textarea class="review-textarea" placeholder="이 책의 한 줄 기대평 혹은 인상적인 문구를 남겨주세요" maxlength="200" required></textarea>
+          <textarea class="review-textarea" placeholder="인상적인 구절이나 기대평을 남겨주세요" maxlength="200" required></textarea>
           <div class="review-char-count"><span class="review-count">0</span>/200</div>
           ${isEvent ? `<label class="review-checkbox">
             <input type="checkbox" required>
