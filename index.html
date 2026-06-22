@@ -2395,6 +2395,13 @@
       renderBooks();
     }
     initData();
+
+    document.addEventListener('copy', e => e.preventDefault());
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('selectstart', e => {
+      if (e.target.matches('input, textarea')) return;
+      e.preventDefault();
+    });
   </script>
 
 </body>
