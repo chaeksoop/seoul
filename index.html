@@ -1816,7 +1816,7 @@
 
         document.querySelectorAll('.book-card.expanded').forEach(c => {
           const d = c.querySelector('.book-detail');
-          if (d) { d.style.height = '0'; d.style.padding = ''; }
+          if (d) { d.style.overflow = 'hidden'; d.style.height = '0'; d.style.padding = ''; }
           c.classList.remove('expanded');
         });
 
@@ -1826,10 +1826,14 @@
           requestAnimationFrame(() => {
             const detail = card.querySelector('.book-detail');
             detail.style.height = 'auto';
-            const fullHeight = detail.scrollHeight + 24;
+            const fullHeight = detail.scrollHeight + 32;
             detail.style.height = '0';
             detail.offsetHeight;
             detail.style.height = fullHeight + 'px';
+            setTimeout(() => {
+              detail.style.height = 'auto';
+              detail.style.overflow = 'visible';
+            }, 450);
           });
           setTimeout(() => {
             const viewH = window.innerHeight;
