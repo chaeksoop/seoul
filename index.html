@@ -171,9 +171,20 @@
   <div class="stop-drawer" id="stopDrawer">
     <div class="stop-drawer-header">
       <div class="stop-drawer-icon">📝</div>
-      <div class="stop-drawer-title">한 줄 기대평 혹은 인상적인 문구 남기기</div>
     </div>
     <div id="stopDrawerForm"></div>
+  </div>
+
+  <!-- Review Success Popup -->
+  <div class="review-success-popup" id="reviewSuccessPopup">
+    <div class="review-success-popup-overlay" id="reviewSuccessOverlay"></div>
+    <canvas id="confettiCanvas"></canvas>
+    <div class="review-success-popup-content">
+      <div class="review-success-popup-icon">🎉</div>
+      <div class="review-success-popup-title" id="reviewSuccessTitle"></div>
+      <div class="review-success-popup-sub" id="reviewSuccessSub"></div>
+      <div class="review-success-popup-review" id="reviewSuccessReview"></div>
+    </div>
   </div>
 
   <!-- Admin Panel -->
@@ -1338,6 +1349,68 @@
       return BAD_WORDS.some(w => lower.includes(w.toLowerCase()));
     }
 
+    // ── Confetti ──
+    let confettiInterval = null;
+
+    function startConfetti() {
+      const canvas = document.getElementById('confettiCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      const colors = ['#A8C9A5','#D4A853','#E8A87C','#85CDCA','#F4A7A7','#B8A8D8','#F7DC6F'];
+      const pieces = Array.from({length: 120}, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height - canvas.height,
+        w: 4 + Math.random() * 6,
+        h: 4 + Math.random() * 10,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        vy: 1 + Math.random() * 2,
+        vx: -1 + Math.random() * 2,
+        rot: Math.random() * 360,
+        rotV: -3 + Math.random() * 6,
+        opacity: 0.8 + Math.random() * 0.2
+      }));
+      if (confettiInterval) clearInterval(confettiInterval);
+      let frames = 0;
+      confettiInterval = setInterval(() => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let alive = false;
+        pieces.forEach(p => {
+          p.y += p.vy;
+          p.x += p.vx;
+          p.rot += p.rotV;
+          p.vy += 0.02;
+          if (p.y < canvas.height + 20) alive = true;
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rot * Math.PI / 180);
+          ctx.globalAlpha = p.opacity * Math.max(0, 1 - (p.y + 20) / (canvas.height + 40));
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+          ctx.restore();
+        });
+        frames++;
+        if (!alive || frames > 300) {
+          clearInterval(confettiInterval);
+          confettiInterval = null;
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+      }, 20);
+    }
+
+    function stopConfetti() {
+      if (confettiInterval) {
+        clearInterval(confettiInterval);
+        confettiInterval = null;
+      }
+      const canvas = document.getElementById('confettiCanvas');
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+
     // ── Messages (Firestore) ──
     let messagesCache = [];
 
@@ -1912,22 +1985,20 @@
 
       const isEvent = form.dataset.event === 'true';
       const successSub = isEvent
-        ? '부스 스태프에게 굿즈를 받아가세요 :)'
+        ? '부스 스태프에게 화면을 보여주고 굿즈를 받아가세요. :)'
         : '관리자가 확인 중입니다';
 
-      form.innerHTML = `
-        <div class="review-success">
-          <p class="review-success-icon">🎉</p>
-          <p class="review-success-text">기대평 감사합니다!</p>
-          <p class="review-success-sub">${successSub}</p>
-          <div class="review-success-preview">
-            <p class="review-success-label">✍️ 작성한 기대평</p>
-            <p class="review-success-quote">"${escapeHtml(text)}"</p>
-            <p class="review-success-author">— ${escapeHtml(name)}</p>
-          </div>
-          <p class="review-success-dismiss">👆 바깥을 누르면 닫힙니다</p>
-        </div>
-      `;
+      document.getElementById('stopDrawer').classList.remove('open');
+      document.getElementById('stopDrawerOverlay').classList.remove('open');
+      document.getElementById('floatingStopBtn').classList.remove('show');
+
+      document.getElementById('reviewSuccessTitle').textContent = '이벤트 참여 감사합니다!';
+      document.getElementById('reviewSuccessSub').textContent = successSub;
+      document.getElementById('reviewSuccessReview').innerHTML =
+        `<div class="review-success-quote">"${escapeHtml(text)}"</div>` +
+        `<div class="review-success-author">— ${escapeHtml(name)}</div>`;
+      document.getElementById('reviewSuccessPopup').classList.add('open');
+      startConfetti();
     }
 
     // ── DOM Events ──
@@ -2084,6 +2155,12 @@
     document.getElementById('stopDrawerOverlay').addEventListener('click', () => {
       document.getElementById('stopDrawer').classList.remove('open');
       document.getElementById('stopDrawerOverlay').classList.remove('open');
+    });
+
+    // Review success popup close
+    document.getElementById('reviewSuccessOverlay').addEventListener('click', () => {
+      document.getElementById('reviewSuccessPopup').classList.remove('open');
+      stopConfetti();
     });
 
     // Admin panel

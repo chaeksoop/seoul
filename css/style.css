@@ -1272,6 +1272,80 @@ body.reader-open {
   background: #C49A48;
 }
 
+/* ── Review Success Popup ── */
+.review-success-popup {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.review-success-popup.open {
+  display: flex;
+}
+.review-success-popup-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(44, 62, 45, 0.4);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+}
+#confettiCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+.review-success-popup-content {
+  position: relative;
+  background: #fff;
+  border-radius: 20px;
+  padding: 36px 24px 32px;
+  max-width: 380px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 12px 48px rgba(44, 62, 45, 0.2);
+  animation: popupSlideUp 0.35s ease;
+  z-index: 2;
+}
+.review-success-popup-icon {
+  font-size: 2.8rem;
+  margin-bottom: 14px;
+}
+.review-success-popup-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #2C3E2D;
+  margin-bottom: 8px;
+}
+.review-success-popup-sub {
+  font-size: 0.9rem;
+  color: #7A8D7A;
+  margin-bottom: 18px;
+  line-height: 1.5;
+}
+.review-success-popup-review {
+  padding: 16px;
+  background: #F7FAF6;
+  border-radius: 14px;
+  border: 1px solid rgba(168, 201, 165, 0.15);
+}
+.review-success-popup-review .review-success-quote {
+  font-size: 0.92rem;
+  font-style: italic;
+  color: #4A5D4A;
+  line-height: 1.6;
+  margin-bottom: 4px;
+}
+.review-success-popup-review .review-success-author {
+  font-size: 0.82rem;
+  color: #8A9D8A;
+}
+
 /* ── Floating Stop Button ── */
 .floating-stop-btn {
   display: none;
