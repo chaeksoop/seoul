@@ -1284,7 +1284,10 @@
         const r = reviewsCache.find(r => r._firebaseId === firebaseId);
         if (r) { r.approved = true; }
         buildReviewSlides(getReviews());
-      } catch (e) { console.error('approveReview failed:', e); }
+      } catch (e) {
+        console.error('approveReview failed:', e);
+        alert('승인 처리에 실패했습니다. (에러: ' + e.message + ')');
+      }
     }
     async function unapproveReview(firebaseId) {
       try {
@@ -1292,7 +1295,10 @@
         const r = reviewsCache.find(r => r._firebaseId === firebaseId);
         if (r) { r.approved = false; }
         buildReviewSlides(getReviews());
-      } catch (e) { console.error('unapproveReview failed:', e); }
+      } catch (e) {
+        console.error('unapproveReview failed:', e);
+        alert('승인 취소 처리에 실패했습니다. (에러: ' + e.message + ')');
+      }
     }
 
     // ── Review Carousel ──
