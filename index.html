@@ -2416,7 +2416,11 @@
     document.addEventListener('copy', e => e.preventDefault());
     document.addEventListener('contextmenu', e => e.preventDefault());
     document.addEventListener('selectstart', e => e.preventDefault());
-    document.addEventListener('selectionchange', () => window.getSelection().removeAllRanges());
+    document.addEventListener('selectionchange', () => {
+      const a = document.activeElement;
+      if (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA')) return;
+      window.getSelection().removeAllRanges();
+    });
     document.addEventListener('keydown', e => {
       if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'C')) e.preventDefault();
     });
