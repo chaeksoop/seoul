@@ -1492,7 +1492,7 @@
         messagesCache.unshift({ ...msg, _firebaseId: docRef.id });
       } catch (e) {
         console.error('saveMessage failed:', e);
-        messagesCache.unshift(msg);
+        messagesCache.unshift({ ...msg, _firebaseId: 'local_' + (msg.id || Date.now()) });
       }
     }
 
